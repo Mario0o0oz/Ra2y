@@ -1,39 +1,39 @@
 // ============================================================
 // Ra2y — Supabase Backend Integration
+// Email OTP version
 // ============================================================
 
 const SUPABASE_URL  = 'https://xewlelrkglgsrbcecigv.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhld2xlbHJrZ2xnc3JiY2VjaWd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MjM4ODUsImV4cCI6MjA5MjE5OTg4NX0.3vY6bhwEysJk6-Y36oqqg2xE6m2FHeYnXUrkCdqbjYE';
+
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ============================================================
-// AUTH
+// AUTH — EMAIL OTP
 // ============================================================
 
-function normalizeEgyptPhone(phone) {
-  let p = String(phone || '').trim().replace(/\s+/g, '').replace(/-/g, '');
-
-  if (p.startsWith('+20')) return p;
-  if (p.startsWith('20')) return '+' + p;
-  if (p.startsWith('0')) return '+20' + p.slice(1);
-
-  return '+20' + p;
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
 }
 
-function isValidEgyptMobile(phone) {
-  return /^\+201[0125][0-9]{8}$/.test(phone);
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-async function sendOTP(phone) {
-  const formatted = normalizeEgyptPhone(phone);
+async function sendOTP(email) {
+  const cleanEmail = normalizeEmail(email);
 
-  if (!isValidEgyptMobile(formatted)) {
-    throw new Error('Enter a valid Egyptian mobile number');
+  if (!isValidEmail(cleanEmail)) {
+    throw new Error('Enter a valid email address');
   }
 
   const { error } = await db.auth.signInWithOtp({
-    phone: formatted
+    email: cleanEmail,
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: window.location.href
+    }
   });
 
   if (error) throw error;
@@ -41,17 +41,21 @@ async function sendOTP(phone) {
   return true;
 }
 
-async function verifyOTP(phone, token) {
-  const formatted = normalizeEgyptPhone(phone);
+async function verifyOTP(email, token) {
+  const cleanEmail = normalizeEmail(email);
 
-  if (!isValidEgyptMobile(formatted)) {
-    throw new Error('Enter a valid Egyptian mobile number');
+  if (!isValidEmail(cleanEmail)) {
+    throw new Error('Enter a valid email address');
+  }
+
+  if (!token || token.trim().length < 4) {
+    throw new Error('Enter the verification code');
   }
 
   const { data, error } = await db.auth.verifyOtp({
-    phone: formatted,
-    token,
-    type: 'sms'
+    email: cleanEmail,
+    token: token.trim(),
+    type: 'email'
   });
 
   if (error) throw error;
@@ -75,7 +79,8 @@ async function verifyOTP(phone, token) {
   if (!existing) {
     const { error: insertError } = await db.from('users').insert({
       id: user.id,
-      phone: formatted,
+      phone: cleanEmail,
+      name: cleanEmail.split('@')[0],
       is_verified: true
     });
 
@@ -129,7 +134,6 @@ async function getBusinesses({ category, city, sort = 'avg_rating', limit = 12, 
   if (city) query = query.ilike('city', `%${city}%`);
 
   const { data, error } = await query;
-
   if (error) throw error;
 
   return data || [];
@@ -167,7 +171,7 @@ async function getBusinessById(id) {
 }
 
 async function addBusiness(payload) {
-  const user = await requireUser();
+  await requireUser();
 
   const { data, error } = await db
     .from('businesses')
@@ -242,12 +246,17 @@ async function submitReview({
     throw new Error('Please write a more detailed review.');
   }
 
+  const reviewerName =
+    user.email?.split('@')[0] ||
+    user.phone ||
+    'Verified user';
+
   const { data, error } = await db
     .from('reviews')
     .insert({
       business_id,
       user_id: user.id,
-      reviewer_name: user.phone || 'Verified user',
+      reviewer_name: reviewerName,
       rating: Number(rating),
       body_en: cleanText,
       body_ar: text_ar,
@@ -465,6 +474,7 @@ async function handleSearch() {
 
   try {
     const results = await searchBusinesses(term);
+
     grid.innerHTML = results.length
       ? results.map((b, i) => renderBusinessCard(b, i + 1)).join('')
       : '<p>No results found.</p>';
@@ -519,6 +529,8 @@ async function initRa2y() {
   await loadLatestReviews();
 
   db.auth.onAuthStateChange((event, session) => {
+    console.log('AUTH EVENT:', event, session);
+
     const signInBtn = document.querySelector('.btn-signin');
 
     if (!signInBtn) return;
@@ -535,6 +547,8 @@ async function initRa2y() {
   });
 
   const initialUser = await getCurrentUser();
+  console.log('INITIAL USER:', initialUser);
+
   const signInBtn = document.querySelector('.btn-signin');
 
   if (signInBtn) {
