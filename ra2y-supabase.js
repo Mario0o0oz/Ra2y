@@ -13,48 +13,30 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 // AUTH — EMAIL OTP
 // ============================================================
 
-function normalizeEmail(email) {
-  return String(email || '').trim().toLowerCase();
-}
+const SUPABASE_URL  = 'https://xewlelrkglgsrbcecigv.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhld2xlbHJrZ2xnc3JiY2VjaWd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MjM4ODUsImV4cCI6MjA5MjE5OTg4NX0.3vY6bhwEysJk6-Y36oqqg2xE6m2FHeYnXUrkCdqbjYE';
 
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ================= AUTH (EMAIL OTP) =================
 
 async function sendOTP(email) {
-  const cleanEmail = normalizeEmail(email);
-
-  if (!isValidEmail(cleanEmail)) {
-    throw new Error('Enter a valid email address');
-  }
+  const clean = email.trim().toLowerCase();
 
   const { error } = await db.auth.signInWithOtp({
-    email: cleanEmail,
-    options: {
-      shouldCreateUser: true,
-      emailRedirectTo: window.location.href
-    }
+    email: clean
   });
 
   if (error) throw error;
-
-  return true;
 }
 
 async function verifyOTP(email, token) {
-  const cleanEmail = normalizeEmail(email);
-
-  if (!isValidEmail(cleanEmail)) {
-    throw new Error('Enter a valid email address');
-  }
-
-  if (!token || token.trim().length < 4) {
-    throw new Error('Enter the verification code');
-  }
+  const clean = email.trim().toLowerCase();
 
   const { data, error } = await db.auth.verifyOtp({
-    email: cleanEmail,
-    token: token.trim(),
+    email: clean,
+    token,
     type: 'email'
   });
 
@@ -62,63 +44,86 @@ async function verifyOTP(email, token) {
 
   const user = data.user;
 
-  if (!user) {
-    throw new Error('Login failed. No user session created.');
-  }
-
-  const { data: existing, error: lookupError } = await db
+  const { data: existing } = await db
     .from('users')
     .select('id')
     .eq('id', user.id)
     .maybeSingle();
 
-  if (lookupError) {
-    console.warn('User lookup warning:', lookupError);
-  }
-
   if (!existing) {
-    const { error: insertError } = await db.from('users').insert({
+    await db.from('users').insert({
       id: user.id,
-      phone: cleanEmail,
-      name: cleanEmail.split('@')[0],
+      phone: clean,
       is_verified: true
     });
-
-    if (insertError) {
-      console.warn('User profile insert warning:', insertError);
-    }
-  }
-
-  return data;
-}
-
-async function signOut() {
-  await db.auth.signOut();
-  location.reload();
-}
-
-async function getCurrentUser() {
-  const { data, error } = await db.auth.getUser();
-
-  if (error) {
-    console.warn('getCurrentUser error:', error);
-    return null;
-  }
-
-  return data?.user || null;
-}
-
-async function requireUser() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    if (typeof openModal === 'function') openModal('auth');
-    throw new Error('Please sign in first.');
   }
 
   return user;
 }
+async function doSendOTP() {
+  try {
+    const email = document.getElementById("emailInput").value;
 
+    await sendOTP(email);
+
+    goToStep(2);
+
+  } catch (e) {
+    document.getElementById("step1-error").innerText = e.message;
+    document.getElementById("step1-error").classList.add("show");
+  }
+}async function doVerify() {
+  try {
+    const email = document.getElementById("emailInput").value;
+
+    const otp =
+      document.getElementById("otp0").value +
+      document.getElementById("otp1").value +
+      document.getElementById("otp2").value +
+      document.getElementById("otp3").value +
+      document.getElementById("otp4").value +
+      document.getElementById("otp5").value;
+
+    await verifyOTP(email, otp);
+
+    goToStep(3);
+
+  } catch (e) {
+    document.getElementById("step2-error").innerText = e.message;
+    document.getElementById("step2-error").classList.add("show");
+  }
+}
+async function getCurrentUser() {
+  const { data } = await db.auth.getUser();
+  return data.user;
+}
+
+// ================= REVIEW =================
+
+async function submitReview({ business_id, rating, text }) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Login first");
+
+  const { data, error } = await db
+    .from('reviews')
+    .insert({
+      business_id,
+      user_id: user.id,
+      rating,
+      text,
+      status: 'pending'
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  db.functions.invoke('screen-review', {
+    body: { review_id: data.id }
+  });
+
+  return data;
+}
 // ============================================================
 // BUSINESSES
 // ============================================================
