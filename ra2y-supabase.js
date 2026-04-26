@@ -161,6 +161,7 @@ async function getLatestReviews(limit = 10) {
 
 async function submitReview({ business_id, rating, text, text_ar = null, visit_confirmed = false, visit_method = 'self' }) {
   const user = await getCurrentUser();
+if (!user) throw new Error('Must be signed in to submit a review');
 
   if (!user) {
     alert('Please sign in first.');
