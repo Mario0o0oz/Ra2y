@@ -74,16 +74,9 @@ nav{
 }
 
 /* Logo */
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
-.logo-icon{
-  width:40px;height:40px;background:var(--black);border-radius:10px;
-  display:grid;place-items:center;
-  font-family:'Cairo',sans-serif;font-weight:900;font-size:17px;color:var(--green);
-  flex-shrink:0;
-}
-.logo-text{display:flex;flex-direction:column;line-height:1.1}
-.logo-en{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--black);letter-spacing:-.5px}
-.logo-ar{font-family:'Cairo',sans-serif;font-size:10px;font-weight:700;color:var(--muted)}
+.logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0;line-height:1}
+.logo svg{display:block;height:38px;width:auto}
+@media(max-width:500px){.logo svg{height:30px}}
 
 /* Search bar — Yelp twin */
 .nav-search{
@@ -635,11 +628,20 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
 <nav>
   <!-- Logo -->
   <a class="logo" href="#">
-    <div class="logo-icon">ر</div>
-    <div class="logo-text">
-      <span class="logo-en">Ra2y</span>
-      <span class="logo-ar">رأي الناس للناس</span>
-    </div>
+    <svg viewBox="0 0 320 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="رأي الناس للناس">
+      <!-- green dot left -->
+      <circle cx="8" cy="24" r="5" fill="#1db954"/>
+      <!-- Full Arabic wordmark -->
+      <text x="300" y="34" font-size="32" font-weight="900" text-anchor="end"
+        font-family="Cairo,sans-serif" fill="#0d0d0d">
+        <tspan fill="#0d0d0d">رأي </tspan><tspan fill="#1db954">الناس</tspan><tspan fill="#0d0d0d"> للناس</tspan>
+      </text>
+      <!-- green dot right -->
+      <circle cx="312" cy="24" r="5" fill="#1db954"/>
+      <!-- Ra2y tiny under -->
+      <text x="160" y="46" font-size="9" font-weight="700" text-anchor="middle"
+        font-family="'Syne',system-ui,sans-serif" fill="#b0b0a8" letter-spacing="2">Ra2y</text>
+    </svg>
   </a>
 
   <!-- Search -->
@@ -1316,23 +1318,372 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
   </div>
 </div>
 
-<!-- ══ AUTH MODAL ══ -->
-<div class="overlay" id="modal-auth" onclick="closeModal('auth')">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:400px;text-align:center">
-    <button class="m-close" onclick="closeModal('auth')" style="position:absolute;top:20px;left:20px">✕</button>
-    <div style="width:56px;height:56px;background:var(--black);border-radius:14px;display:grid;place-items:center;margin:0 auto 16px;font-family:'Cairo',sans-serif;font-weight:900;font-size:24px;color:var(--green)">ر</div>
-    <div class="m-title en" style="margin-bottom:6px">Welcome to Ra2y</div>
-    <div class="m-title ar" style="margin-bottom:6px">أهلاً بك في را٢ي</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:24px" class="en">Sign in to share your honest reviews and help your community</p>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:24px" class="ar">سجّل دخولك لتشارك آراءك الصادقة وتساعد مجتمعك</p>
-    <div class="fg"><input class="fi" type="tel" placeholder-en="Phone number" placeholder-ar="رقم الهاتف" placeholder="Phone number" style="text-align:center"></div>
-    <button class="btn-submit" onclick="closeModal('auth');showToast()">
-      <span class="en">Send Verification Code →</span>
-      <span class="ar">إرسال رمز التحقق ←</span>
-    </button>
-    <p style="font-size:11px;color:var(--dimmed);margin-top:14px" class="en">One account per phone number — protects against fake reviews</p>
-    <p style="font-size:11px;color:var(--dimmed);margin-top:14px" class="ar">حساب واحد لكل رقم هاتف — حماية من الآراء المزيّفة</p>
-  </div>
+<!-- ══ AUTH MODAL — 3-STEP OTP FLOW ══ -->
+<style>
+/* ── Auth modal overrides ── */
+#modal-auth .modal{
+  max-width:420px;
+  padding:0;
+  overflow:hidden;
+  border-top:none; /* we do our own top bar */
+}
+
+/* Green top accent */
+.auth-top-bar{
+  height:5px;
+  background:linear-gradient(90deg,var(--green),#0fa844);
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.auth-body{ padding:32px 32px 28px; text-align:center; }
+
+/* Logo icon */
+.auth-icon{
+  width:60px;height:60px;background:var(--black);border-radius:16px;
+  display:grid;place-items:center;
+  font-family:'Cairo',sans-serif;font-weight:900;font-size:26px;color:var(--green);
+  margin:0 auto 20px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* Step indicator */
+.auth-steps{
+  display:flex;align-items:center;justify-content:center;gap:0;
+  margin-bottom:28px;
+}
+.auth-step-dot{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--grey);border:2px solid var(--border);
+  display:grid;place-items:center;
+  font-size:11px;font-weight:700;color:var(--dimmed);
+  transition:all .3s;flex-shrink:0;
+}
+.auth-step-dot.done{ background:var(--green);border-color:var(--green);color:#fff; }
+.auth-step-dot.active{ background:var(--black);border-color:var(--black);color:#fff; }
+.auth-step-line{
+  width:40px;height:2px;background:var(--border);
+  transition:background .3s;flex-shrink:0;
+}
+.auth-step-line.done{ background:var(--green); }
+
+/* Step panels */
+.auth-panel{ display:none; }
+.auth-panel.active{ display:block; }
+
+.auth-title{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:22px;
+  color:var(--ink);margin-bottom:6px;
+}
+.auth-sub{
+  font-size:13px;color:var(--muted);line-height:1.6;
+  margin-bottom:24px;
+}
+.auth-sub strong{ color:var(--ink); }
+
+/* Phone input with flag */
+.phone-wrap{
+  display:flex;align-items:center;
+  border:2px solid var(--border);border-radius:12px;
+  overflow:hidden;margin-bottom:14px;
+  transition:border-color .2s,box-shadow .2s;
+  background:var(--paper);
+}
+.phone-wrap:focus-within{
+  border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(29,185,84,.12);
+}
+.phone-flag{
+  padding:0 14px;font-size:20px;
+  border-right:1.5px solid var(--border);
+  background:var(--grey);height:52px;
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+}
+.phone-code{
+  font-size:13px;font-weight:700;color:var(--muted);
+}
+.phone-input{
+  flex:1;border:none;outline:none;
+  font-family:'DM Sans',sans-serif;font-size:16px;
+  padding:14px 16px;background:transparent;color:var(--ink);
+  letter-spacing:.5px;
+}
+.phone-input::placeholder{color:var(--dimmed);}
+
+/* OTP input boxes */
+.otp-wrap{
+  display:flex;gap:10px;justify-content:center;
+  margin-bottom:14px;
+}
+.otp-box{
+  width:52px;height:60px;
+  border:2px solid var(--border);border-radius:12px;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:24px;
+  text-align:center;outline:none;background:var(--paper);color:var(--ink);
+  transition:all .2s;
+  caret-color:var(--green);
+}
+.otp-box:focus{
+  border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(29,185,84,.12);
+  background:#fff;
+}
+.otp-box.filled{
+  border-color:var(--green);
+  background:var(--green-light);
+}
+.otp-box.error{
+  border-color:#ef4444;
+  background:#fef2f2;
+  animation:shake .3s ease;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-6px)}
+  75%{transform:translateX(6px)}
+}
+
+/* Timer */
+.otp-timer{
+  font-size:12px;color:var(--muted);margin-bottom:20px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.otp-timer span{ color:var(--green);font-weight:700; }
+.resend-btn{
+  background:none;border:none;cursor:pointer;
+  color:var(--green);font-weight:700;font-size:12px;
+  font-family:'DM Sans',sans-serif;text-decoration:underline;
+  padding:0;display:none;
+}
+.resend-btn.show{ display:inline; }
+
+/* Name step */
+.name-avatar{
+  width:72px;height:72px;border-radius:50%;
+  display:grid;place-items:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:#fff;
+  margin:0 auto 20px;
+  transition:background .3s;
+}
+
+/* Submit btn states */
+.auth-btn{
+  width:100%;padding:15px;background:var(--black);color:#fff;
+  border:none;border-radius:12px;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:15px;
+  cursor:pointer;transition:all .25s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  position:relative;overflow:hidden;
+}
+.auth-btn:hover:not(:disabled){ background:var(--green);color:#000; }
+.auth-btn:disabled{ opacity:.5;cursor:not-allowed; }
+.auth-btn.loading{ pointer-events:none; }
+.auth-btn .btn-text{ transition:opacity .2s; }
+.auth-btn.loading .btn-text{ opacity:0; }
+.auth-spinner{
+  position:absolute;
+  width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;
+  animation:spin .7s linear infinite;
+  display:none;
+}
+.auth-btn.loading .auth-spinner{ display:block; }
+@keyframes spin{ to{transform:rotate(360deg)} }
+
+/* Success state */
+.auth-success{
+  text-align:center;padding:12px 0 4px;
+}
+.success-circle{
+  width:72px;height:72px;background:var(--green);border-radius:50%;
+  display:grid;place-items:center;margin:0 auto 16px;
+  font-size:32px;
+  animation:pop-in .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pop-in{
+  from{transform:scale(0);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+/* Error message */
+.auth-error{
+  background:#fef2f2;border:1px solid #fecaca;border-radius:8px;
+  padding:10px 14px;font-size:12px;color:#dc2626;
+  margin-bottom:14px;display:none;text-align:left;
+}
+.auth-error.show{ display:block; }
+
+/* Bottom note */
+.auth-note{
+  font-size:11px;color:var(--dimmed);margin-top:14px;line-height:1.5;
+}
+</style>
+
+<div class="overlay" id="modal-auth" onclick="authOverlayClick(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="auth-top-bar"></div>
+    <div class="auth-body">
+
+      <!-- Close btn -->
+      <button class="m-close" onclick="closeModal('auth')" style="position:absolute;top:14px;right:14px;z-index:10">✕</button>
+
+      <!-- Logo -->
+      <div class="auth-icon">ر</div>
+
+      <!-- Step indicator: ①——②——③ -->
+      <div class="auth-steps">
+        <div class="auth-step-dot active" id="sdot-1">1</div>
+        <div class="auth-step-line" id="sline-1"></div>
+        <div class="auth-step-dot" id="sdot-2">2</div>
+        <div class="auth-step-line" id="sline-2"></div>
+        <div class="auth-step-dot" id="sdot-3">3</div>
+      </div>
+
+      <!-- ══ STEP 1: Phone Number ══ -->
+      <div class="auth-panel active" id="auth-step-1">
+        <div class="auth-title en">Welcome to Ra2y</div>
+        <div class="auth-title ar">أهلاً بك في را٢ي</div>
+        <p class="auth-sub en">Enter your phone number to receive a verification code via SMS</p>
+        <p class="auth-sub ar">أدخل رقم هاتفك لاستقبال رمز التحقق عبر SMS</p>
+
+        <div class="phone-wrap">
+          <div class="phone-flag">
+            🇪🇬 <span class="phone-code">+20</span>
+          </div>
+          <input
+            class="phone-input"
+            id="phoneInput"
+            type="tel"
+            inputmode="numeric"
+            placeholder-en="1XX XXX XXXX"
+            placeholder-ar="1XX XXX XXXX"
+            placeholder="1XX XXX XXXX"
+            maxlength="11"
+            oninput="onPhoneInput(this)"
+            onkeydown="if(event.key==='Enter') sendOTP()"
+          />
+        </div>
+
+        <div class="auth-error" id="phone-error"></div>
+
+        <button class="auth-btn" id="sendOtpBtn" onclick="sendOTP()">
+          <span class="auth-spinner"></span>
+          <span class="btn-text en">Send Verification Code →</span>
+          <span class="btn-text ar">إرسال رمز التحقق ←</span>
+        </button>
+
+        <p class="auth-note en">One account per phone number — protects against fake reviews</p>
+        <p class="auth-note ar">حساب واحد لكل رقم هاتف — حماية من الآراء المزيّفة</p>
+      </div>
+
+      <!-- ══ STEP 2: OTP Code ══ -->
+      <div class="auth-panel" id="auth-step-2">
+        <div class="auth-title en">Check your phone</div>
+        <div class="auth-title ar">تحقق من هاتفك</div>
+        <p class="auth-sub en">We sent a 6-digit code to <strong id="phonePrev"></strong><br>Enter it below</p>
+        <p class="auth-sub ar">أرسلنا رمزاً مكوناً من ٦ أرقام إلى <strong id="phonePrevAr"></strong><br>أدخله أدناه</p>
+
+        <div class="otp-wrap" id="otpWrap">
+          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp0" oninput="otpInput(0)" onkeydown="otpKey(event,0)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp1" oninput="otpInput(1)" onkeydown="otpKey(event,1)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp2" oninput="otpInput(2)" onkeydown="otpKey(event,2)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp3" oninput="otpInput(3)" onkeydown="otpKey(event,3)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp4" oninput="otpInput(4)" onkeydown="otpKey(event,4)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp5" oninput="otpInput(5)" onkeydown="otpKey(event,5)">
+        </div>
+
+        <div class="otp-timer">
+          <span class="en">Code expires in</span>
+          <span class="ar">ينتهي الرمز خلال</span>
+          <span id="timerDisplay">2:00</span>
+          <button class="resend-btn" id="resendBtn" onclick="resendOTP()">
+            <span class="en">Resend code</span>
+            <span class="ar">إعادة الإرسال</span>
+          </button>
+        </div>
+
+        <div class="auth-error" id="otp-error"></div>
+
+        <button class="auth-btn" id="verifyOtpBtn" onclick="verifyOTP()" disabled>
+          <span class="auth-spinner"></span>
+          <span class="btn-text en">Verify Code →</span>
+          <span class="btn-text ar">تحقق من الرمز ←</span>
+        </button>
+
+        <button onclick="goToStep(1)" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;margin-top:12px;font-family:'DM Sans',sans-serif;">
+          <span class="en">← Change phone number</span>
+          <span class="ar">→ تغيير رقم الهاتف</span>
+        </button>
+      </div>
+
+      <!-- ══ STEP 3: Name Setup ══ -->
+      <div class="auth-panel" id="auth-step-3">
+        <div class="name-avatar" id="nameAvatar" style="background:var(--green)">😊</div>
+        <div class="auth-title en">Almost done!</div>
+        <div class="auth-title ar">تقريباً انتهينا!</div>
+        <p class="auth-sub en">Add your name so people know who's behind the honest review</p>
+        <p class="auth-sub ar">أضف اسمك حتى يعرف الناس من يقف وراء الرأي الصادق</p>
+
+        <div class="fg" style="text-align:left">
+          <label class="fl en">Your Name</label>
+          <label class="fl ar">اسمك</label>
+          <input class="fi" id="nameInput" type="text"
+            placeholder-en="e.g. Mohamed Hassan"
+            placeholder-ar="مثال: محمد حسن"
+            placeholder="e.g. Mohamed Hassan"
+            maxlength="40"
+            oninput="onNameInput(this)"
+            style="font-size:16px"
+          />
+        </div>
+
+        <div class="fg" style="text-align:left;margin-top:4px">
+          <label class="fl en">Your City</label>
+          <label class="fl ar">مدينتك</label>
+          <select class="fsel" id="citySelect" style="font-size:15px">
+            <option value="" class="en">Select your city…</option>
+            <option value="" class="ar">اختر مدينتك…</option>
+            <option value="Cairo">Cairo / القاهرة</option>
+            <option value="Alexandria">Alexandria / الإسكندرية</option>
+            <option value="Giza">Giza / الجيزة</option>
+            <option value="New Cairo">New Cairo / القاهرة الجديدة</option>
+            <option value="6th October">6th of October / السادس من أكتوبر</option>
+            <option value="Hurghada">Hurghada / الغردقة</option>
+            <option value="Sharm">Sharm El Sheikh / شرم الشيخ</option>
+            <option value="Luxor">Luxor / الأقصر</option>
+            <option value="Aswan">Aswan / أسوان</option>
+            <option value="Other">Other / أخرى</option>
+          </select>
+        </div>
+
+        <div class="auth-error" id="name-error"></div>
+
+        <button class="auth-btn" id="createAccountBtn" onclick="createAccount()">
+          <span class="auth-spinner"></span>
+          <span class="btn-text en">Create My Account →</span>
+          <span class="btn-text ar">إنشاء حسابي ←</span>
+        </button>
+
+        <p class="auth-note en">By creating an account you agree to our <a href="#" style="color:var(--green)">Terms</a> & <a href="#" style="color:var(--green)">Privacy Policy</a></p>
+        <p class="auth-note ar">بإنشاء حساب توافق على <a href="#" style="color:var(--green)">الشروط</a> و<a href="#" style="color:var(--green)">سياسة الخصوصية</a></p>
+      </div>
+
+      <!-- ══ SUCCESS ══ -->
+      <div class="auth-panel" id="auth-step-success">
+        <div class="auth-success">
+          <div class="success-circle">✓</div>
+          <div class="auth-title en">You're in! 🎉</div>
+          <div class="auth-title ar">!أنت الآن داخل 🎉</div>
+          <p class="auth-sub en">Welcome to Ra2y, <strong id="welcomeName"></strong>!<br>You can now write honest reviews and help your community.</p>
+          <p class="auth-sub ar">أهلاً في را٢ي، <strong id="welcomeNameAr"></strong>!<br>يمكنك الآن كتابة آراء صادقة ومساعدة مجتمعك.</p>
+          <button class="auth-btn" onclick="closeModal('auth')" style="margin-top:8px">
+            <span class="btn-text en">Start Reviewing →</span>
+            <span class="btn-text ar">ابدأ الآن ←</span>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /auth-body -->
+  </div><!-- /modal -->
 </div>
 
 <!-- ══ TOAST ══ -->
@@ -1342,7 +1693,16 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
 </div>
 
 <script>
-// ── Language ──
+// ════════════════════════════════════════════════════════
+//  SUPABASE  — swap in your real keys when ready
+//  import from ra2y-supabase.js or paste keys here
+// ════════════════════════════════════════════════════════
+// const SUPABASE_URL  = 'https://YOUR_PROJECT.supabase.co';
+// const SUPABASE_ANON = 'YOUR_ANON_KEY';
+// const { createClient } = supabase;
+// const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ── Language ──────────────────────────────────────────
 function setLang(l){
   document.documentElement.setAttribute('data-lang',l);
   document.documentElement.setAttribute('dir',l==='ar'?'rtl':'ltr');
@@ -1356,35 +1716,46 @@ function setLang(l){
     el.placeholder=el.getAttribute('placeholder-'+l)||'';
   });
 }
-setLang('en'); // default
+setLang('en');
 
-// ── Tabs ──
+// ── Tabs ──────────────────────────────────────────────
 function activateTab(t){
-  const all=t.closest('.tabs').querySelectorAll('.tab');
-  all.forEach(x=>x.classList.remove('on'));
+  t.closest('.tabs').querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
   t.classList.add('on');
 }
 
-// ── Stars ──
+// ── Stars ─────────────────────────────────────────────
 function setS(n){
-  document.querySelectorAll('#starPick span').forEach((s,i)=>{
-    s.classList.toggle('lit',i<n);
-  });
+  document.querySelectorAll('#starPick span').forEach((s,i)=>s.classList.toggle('lit',i<n));
 }
 
-// ── Modals ──
-function openModal(id){document.getElementById('modal-'+id).classList.add('open');document.body.style.overflow='hidden'}
-function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');document.body.style.overflow=''}
+// ── Modals ────────────────────────────────────────────
+function openModal(id){
+  document.getElementById('modal-'+id).classList.add('open');
+  document.body.style.overflow='hidden';
+  if(id==='auth') resetAuth();
+}
+function closeModal(id){
+  document.getElementById('modal-'+id).classList.remove('open');
+  document.body.style.overflow='';
+}
+function authOverlayClick(e){
+  if(e.target===document.getElementById('modal-auth')) closeModal('auth');
+}
 
-// ── Toast ──
-function showToast(){
+// ── Toast ─────────────────────────────────────────────
+function showToast(msg){
   const t=document.getElementById('toast');
+  if(msg){
+    t.querySelector('.en').textContent=msg;
+    t.querySelector('.ar').textContent=msg;
+  }
   t.classList.add('on');
   setTimeout(()=>t.classList.remove('on'),4000);
 }
-function submitReview(){closeModal('write');showToast()}
+function submitReview(){closeModal('write');showToast();}
 
-// ── Helpful ──
+// ── Helpful ───────────────────────────────────────────
 function helpful(btn){
   if(btn._done)return;btn._done=true;
   [btn.querySelector('.en'),btn.querySelector('.ar')].forEach(el=>{
@@ -1397,19 +1768,361 @@ function helpful(btn){
   btn.style.borderColor='rgba(29,185,84,.3)';
 }
 
-// ── Quick fill search ──
 function fill(q){document.getElementById('heroWhat').value=q}
 function scrollToBiz(){document.getElementById('businesses').scrollIntoView({behavior:'smooth'})}
 
-// ── Scroll reveal ──
+// ── Scroll reveal ─────────────────────────────────────
 const obs=new IntersectionObserver(entries=>{
   entries.forEach((e,i)=>{
-    if(e.isIntersecting){
-      setTimeout(()=>e.target.classList.add('visible'),i*60);
-    }
+    if(e.isIntersecting) setTimeout(()=>e.target.classList.add('visible'),i*60);
   });
 },{threshold:.08});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+
+// ════════════════════════════════════════════════════════
+//  AUTH — 3-STEP OTP FLOW
+// ════════════════════════════════════════════════════════
+
+let authState = {
+  phone: '',        // full phone with country code
+  otpCode: '',      // what user typed
+  timerInterval: null,
+  timerSeconds: 120,
+  currentUser: null,
+};
+
+// Colours for avatar
+const avatarColors = ['#1db954','#0d9488','#7c3aed','#dc2626','#d97706','#0369a1'];
+
+// ── Step navigation ───────────────────────────────────
+function goToStep(n){
+  // Hide all panels
+  document.querySelectorAll('.auth-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('auth-step-'+n).classList.add('active');
+
+  // Update step dots
+  for(let i=1;i<=3;i++){
+    const dot  = document.getElementById('sdot-'+i);
+    const line = document.getElementById('sline-'+i);
+    if(i < n){
+      dot.className='auth-step-dot done'; dot.textContent='✓';
+    } else if(i === n){
+      dot.className='auth-step-dot active'; dot.textContent=i;
+    } else {
+      dot.className='auth-step-dot'; dot.textContent=i;
+    }
+    if(line){
+      line.className='auth-step-line'+(i<n?' done':'');
+    }
+  }
+
+  // Focus first input
+  if(n===1) setTimeout(()=>document.getElementById('phoneInput').focus(),200);
+  if(n===2) setTimeout(()=>document.getElementById('otp0').focus(),200);
+  if(n===3) setTimeout(()=>document.getElementById('nameInput').focus(),200);
+}
+
+function resetAuth(){
+  goToStep(1);
+  document.getElementById('phoneInput').value='';
+  clearOtpBoxes();
+  clearErrors();
+  stopTimer();
+}
+
+// ── Phone input validation ─────────────────────────────
+function onPhoneInput(el){
+  // Egyptian mobile: 01x xxxxxxxx (10 digits) or 1x xxxxxxxx
+  el.value = el.value.replace(/\D/g,'');
+  const btn = document.getElementById('sendOtpBtn');
+  const valid = el.value.length >= 10;
+  btn.disabled = !valid;
+}
+
+// ── Error display ──────────────────────────────────────
+function showError(id, msg){
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearErrors(){
+  document.querySelectorAll('.auth-error').forEach(e=>{
+    e.classList.remove('show'); e.textContent='';
+  });
+}
+function clearOtpBoxes(){
+  for(let i=0;i<6;i++){
+    const b=document.getElementById('otp'+i);
+    if(b){b.value='';b.className='otp-box';}
+  }
+  document.getElementById('verifyOtpBtn').disabled=true;
+}
+
+// ── Button loading state ───────────────────────────────
+function setBtnLoading(id, loading){
+  const btn = document.getElementById(id);
+  btn.classList.toggle('loading', loading);
+  btn.disabled = loading;
+}
+
+// ── STEP 1: Send OTP ───────────────────────────────────
+async function sendOTP(){
+  clearErrors();
+  const raw = document.getElementById('phoneInput').value.replace(/\D/g,'');
+
+  // Validate Egyptian mobile number
+  if(raw.length < 10){
+    showError('phone-error','Please enter a valid Egyptian phone number (e.g. 01012345678)');
+    return;
+  }
+
+  // Build full international number
+  let phone = raw;
+  if(phone.startsWith('0')) phone = phone.slice(1); // remove leading 0
+  if(!phone.startsWith('20')) phone = '20' + phone; // add Egypt code
+  phone = '+' + phone;
+
+  authState.phone = phone;
+
+  // Show phone in step 2
+  const display = raw.startsWith('0') ? raw : '0'+raw;
+  document.getElementById('phonePrev').textContent   = display;
+  document.getElementById('phonePrevAr').textContent = display;
+
+  setBtnLoading('sendOtpBtn', true);
+
+  try {
+    // ── REAL Supabase call (uncomment when keys are set) ──
+    // await db.auth.signInWithOtp({ phone: authState.phone });
+
+    // ── DEMO MODE (remove when Supabase is connected) ──
+    await fakeDelay(1200);
+    // In demo: OTP is always "123456"
+    console.log('📱 DEMO: OTP sent to', phone, '| Demo code: 123456');
+
+    goToStep(2);
+    startTimer();
+
+  } catch(err){
+    showError('phone-error', err.message || 'Failed to send code. Try again.');
+  } finally {
+    setBtnLoading('sendOtpBtn', false);
+  }
+}
+
+// ── OTP box keyboard handling ──────────────────────────
+function otpInput(idx){
+  const box = document.getElementById('otp'+idx);
+  const val = box.value.replace(/\D/g,'');
+  box.value = val;
+
+  if(val){
+    box.classList.add('filled');
+    box.classList.remove('error');
+    // Auto-advance
+    if(idx < 5) document.getElementById('otp'+(idx+1)).focus();
+  } else {
+    box.classList.remove('filled');
+  }
+
+  // Enable verify btn when all 6 filled
+  const allFilled = [0,1,2,3,4,5].every(i=>document.getElementById('otp'+i).value!=='');
+  document.getElementById('verifyOtpBtn').disabled = !allFilled;
+
+  // Auto-submit when all filled
+  if(allFilled) setTimeout(verifyOTP, 300);
+}
+
+function otpKey(e, idx){
+  // Backspace: clear + go back
+  if(e.key==='Backspace'){
+    const box=document.getElementById('otp'+idx);
+    if(!box.value && idx>0){
+      const prev=document.getElementById('otp'+(idx-1));
+      prev.value='';
+      prev.classList.remove('filled');
+      prev.focus();
+    }
+  }
+  // Paste handler
+  if(e.key==='v' && (e.ctrlKey||e.metaKey)){
+    e.preventDefault();
+    navigator.clipboard.readText().then(text=>{
+      const digits=text.replace(/\D/g,'').slice(0,6);
+      digits.split('').forEach((d,i)=>{
+        const b=document.getElementById('otp'+i);
+        if(b){b.value=d;b.classList.add('filled');}
+      });
+      if(digits.length===6){
+        document.getElementById('otp5').focus();
+        document.getElementById('verifyOtpBtn').disabled=false;
+        setTimeout(verifyOTP,300);
+      }
+    }).catch(()=>{});
+  }
+}
+
+// ── Countdown timer ────────────────────────────────────
+function startTimer(){
+  authState.timerSeconds = 120;
+  stopTimer();
+  document.getElementById('resendBtn').classList.remove('show');
+  updateTimerDisplay();
+  authState.timerInterval = setInterval(()=>{
+    authState.timerSeconds--;
+    updateTimerDisplay();
+    if(authState.timerSeconds<=0){
+      stopTimer();
+      document.getElementById('timerDisplay').textContent='0:00';
+      document.getElementById('resendBtn').classList.add('show');
+    }
+  }, 1000);
+}
+
+function stopTimer(){
+  if(authState.timerInterval) clearInterval(authState.timerInterval);
+}
+
+function updateTimerDisplay(){
+  const m=Math.floor(authState.timerSeconds/60);
+  const s=authState.timerSeconds%60;
+  document.getElementById('timerDisplay').textContent=m+':'+(s<10?'0':'')+s;
+}
+
+async function resendOTP(){
+  document.getElementById('resendBtn').classList.remove('show');
+  clearOtpBoxes();
+  clearErrors();
+
+  try {
+    // await db.auth.signInWithOtp({ phone: authState.phone });
+    await fakeDelay(800);
+    startTimer();
+    showError('otp-error',''); // clear
+    // Show brief success
+    const display=document.getElementById('phonePrev').textContent;
+    console.log('📱 DEMO: Resent OTP to', display);
+  } catch(err){
+    showError('otp-error', 'Failed to resend. Please try again.');
+  }
+}
+
+// ── STEP 2: Verify OTP ────────────────────────────────
+async function verifyOTP(){
+  clearErrors();
+  const code=[0,1,2,3,4,5].map(i=>document.getElementById('otp'+i).value).join('');
+  if(code.length<6) return;
+
+  authState.otpCode=code;
+  setBtnLoading('verifyOtpBtn',true);
+
+  try {
+    // ── REAL Supabase call ──
+    // const { data, error } = await db.auth.verifyOtp({
+    //   phone: authState.phone,
+    //   token: code,
+    //   type: 'sms'
+    // });
+    // if(error) throw error;
+    // authState.currentUser = data.user;
+
+    // ── DEMO MODE ──
+    await fakeDelay(1200);
+    if(code !== '123456'){
+      throw new Error('Incorrect code. Try 123456 in demo mode.');
+    }
+    authState.currentUser = { id: 'demo-user-123', phone: authState.phone };
+
+    stopTimer();
+    goToStep(3);
+
+  } catch(err){
+    // Shake all OTP boxes
+    document.querySelectorAll('.otp-box').forEach(b=>{
+      b.classList.add('error');
+      setTimeout(()=>b.classList.remove('error'),400);
+    });
+    showError('otp-error', err.message || 'Incorrect code. Please try again.');
+    setBtnLoading('verifyOtpBtn',false);
+  }
+}
+
+// ── STEP 3: Name input ────────────────────────────────
+function onNameInput(el){
+  const name=el.value.trim();
+  // Update avatar with first letter
+  const av=document.getElementById('nameAvatar');
+  if(name.length>0){
+    av.textContent=name[0].toUpperCase();
+    const col=avatarColors[name.charCodeAt(0)%avatarColors.length];
+    av.style.background=col;
+  } else {
+    av.textContent='😊';
+    av.style.background='var(--green)';
+  }
+}
+
+// ── STEP 3: Create account ────────────────────────────
+async function createAccount(){
+  clearErrors();
+  const name=document.getElementById('nameInput').value.trim();
+  const city=document.getElementById('citySelect').value;
+
+  if(!name){
+    showError('name-error','Please enter your name');
+    return;
+  }
+
+  setBtnLoading('createAccountBtn',true);
+
+  try {
+    // ── REAL Supabase call ──
+    // await db.from('users').upsert({
+    //   id: authState.currentUser.id,
+    //   phone: authState.phone,
+    //   name: name,
+    //   city: city,
+    //   is_verified: true,
+    // });
+
+    // ── DEMO MODE ──
+    await fakeDelay(1200);
+    authState.currentUser.name = name;
+
+    // Update nav button to show user's name
+    document.querySelectorAll('.btn-signin').forEach(b=>{
+      b.innerHTML=`<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg> ${name.split(' ')[0]}`;
+      b.style.background='var(--green)';
+      b.style.color='#000';
+    });
+
+    // Show success screen
+    document.getElementById('welcomeName').textContent=name;
+    document.getElementById('welcomeNameAr').textContent=name;
+    document.querySelectorAll('.auth-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('auth-step-success').classList.add('active');
+
+    // Hide step dots on success
+    document.querySelector('.auth-steps').style.display='none';
+
+    // Update step dots all done
+    for(let i=1;i<=3;i++){
+      const dot=document.getElementById('sdot-'+i);
+      if(dot){dot.className='auth-step-dot done';dot.textContent='✓';}
+      const line=document.getElementById('sline-'+i);
+      if(line) line.className='auth-step-line done';
+    }
+
+  } catch(err){
+    showError('name-error', err.message || 'Something went wrong. Please try again.');
+    setBtnLoading('createAccountBtn',false);
+  }
+}
+
+// ── Utility ───────────────────────────────────────────
+function fakeDelay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
 </script>
 </body>
 </html>
