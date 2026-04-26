@@ -4,283 +4,113 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Ra2y · رأي الناس للناس</title>
+<meta name="description" content="Ra2y — Egypt's first truly honest review platform. No fake reviews. No paid rankings."/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
 :root{
-  --green:#1db954;
-  --green-dark:#17a349;
-  --green-light:#e8f9ee;
-  --green-mid:#d0f5dc;
-  --black:#0d0d0d;
-  --ink:#111111;
-  --paper:#fafaf8;
-  --white:#ffffff;
-  --grey:#f4f4f2;
-  --border:#e8e8e4;
-  --muted:#7a7a74;
-  --dimmed:#b0b0a8;
-  --star:#f5a623;
-  --radius:12px;
-  --radius-lg:20px;
-  --shadow:0 2px 16px rgba(0,0,0,0.07);
-  --shadow-lg:0 8px 40px rgba(0,0,0,0.12);
+  --green:#1db954;--green-dark:#17a349;--green-light:#e8f9ee;
+  --black:#0d0d0d;--ink:#111111;--paper:#fafaf8;--white:#fff;
+  --grey:#f4f4f2;--border:#e8e8e4;--muted:#7a7a74;--dimmed:#b0b0a8;
+  --star:#f5a623;--radius:12px;--radius-lg:20px;
+  --shadow:0 2px 16px rgba(0,0,0,.07);--shadow-lg:0 8px 40px rgba(0,0,0,.12);
 }
-
 html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);overflow-x:hidden;line-height:1.6}
-
-/* ── LANGUAGE VISIBILITY ── */
 html[data-lang="en"] .ar{display:none!important}
 html[data-lang="ar"] .en{display:none!important}
 html[data-lang="ar"]{direction:rtl}
 html[data-lang="en"]{direction:ltr}
-
-/* ══════════════════════════════════
-   TOP UTILITY BAR
-══════════════════════════════════ */
-.top-bar{
-  background:var(--black);color:rgba(255,255,255,0.65);
-  font-size:12px;font-weight:500;
-  padding:8px clamp(16px,4vw,60px);
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-}
+ 
+/* ── TOP BAR ── */
+.top-bar{background:var(--black);color:rgba(255,255,255,.65);font-size:12px;font-weight:500;padding:8px clamp(16px,4vw,60px);display:flex;align-items:center;justify-content:space-between;gap:16px}
 .top-bar a{color:var(--green);text-decoration:none;font-weight:700}
 .top-bar-right{display:flex;align-items:center;gap:16px}
-
-.lang-switch{
-  display:flex;gap:2px;
-  background:rgba(255,255,255,0.08);border-radius:6px;padding:2px;
-}
-.lbtn{
-  padding:3px 10px;border-radius:4px;border:none;background:transparent;
-  color:rgba(255,255,255,0.5);font-size:11px;font-weight:700;
-  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;letter-spacing:.5px;
-}
+.lang-switch{display:flex;gap:2px;background:rgba(255,255,255,.08);border-radius:6px;padding:2px}
+.lbtn{padding:3px 10px;border-radius:4px;border:none;background:transparent;color:rgba(255,255,255,.5);font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;letter-spacing:.5px}
 .lbtn.on{background:var(--green);color:#000}
-
-/* ══════════════════════════════════
-   NAVBAR  (Yelp-style)
-══════════════════════════════════ */
-nav{
-  background:var(--white);
-  border-bottom:1.5px solid var(--border);
-  padding:0 clamp(16px,4vw,60px);
-  height:64px;
-  display:flex;align-items:center;gap:20px;
-  position:sticky;top:0;z-index:100;
-}
-
-/* Logo */
-.logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0;line-height:1}
-.logo svg{display:block;height:38px;width:auto}
-@media(max-width:500px){.logo svg{height:30px}}
-
-/* Search bar — Yelp twin */
-.nav-search{
-  flex:1;max-width:580px;
-  display:flex;align-items:center;
-  border:1.5px solid var(--border);border-radius:10px;
-  overflow:hidden;background:var(--white);
-  transition:border-color .2s,box-shadow .2s;
-}
-.nav-search:focus-within{
-  border-color:var(--green);
-  box-shadow:0 0 0 3px rgba(29,185,84,.1);
-}
-.ns-what{
-  flex:1;display:flex;align-items:center;gap:8px;
-  padding:0 14px;border-left:1.5px solid var(--border);
-}
-html[data-lang="ar"] .ns-what{border-left:none;border-right:1.5px solid var(--border)}
-.ns-what:first-child{border:none}
-.ns-icon{color:var(--muted);font-size:16px;flex-shrink:0}
-.ns-what input{
-  border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;
-  color:var(--ink);background:transparent;width:100%;
-}
+ 
+/* ── NAVBAR ── */
+nav{background:var(--white);border-bottom:1.5px solid var(--border);padding:0 clamp(16px,4vw,60px);height:64px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:100}
+ 
+/* ── LOGO (Ra2y style — like screenshot) ── */
+.logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0;gap:0}
+.logo-wordmark{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--black);letter-spacing:-1px;line-height:1;position:relative;padding-bottom:4px}
+.logo-wordmark::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--green);border-radius:2px}
+.logo-2{color:var(--green)}
+.logo-dot{width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:6px;margin-top:4px;flex-shrink:0}
+html[data-lang="ar"] .logo-dot{margin-right:0;margin-left:6px}
+ 
+/* ── NAV SEARCH ── */
+.nav-search{flex:1;max-width:560px;display:flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;background:var(--white);transition:border-color .2s,box-shadow .2s}
+.nav-search:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,185,84,.1)}
+.ns-what{flex:1;display:flex;align-items:center;gap:8px;padding:0 14px}
+.ns-div{width:1.5px;height:20px;background:var(--border);flex-shrink:0}
+.ns-icon{color:var(--muted);font-size:15px;flex-shrink:0}
+.ns-what input{border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:transparent;width:100%;padding:10px 0}
 .ns-what input::placeholder{color:var(--dimmed)}
-.ns-btn{
-  padding:0 20px;height:100%;background:var(--green);
-  border:none;cursor:pointer;font-family:'Syne',sans-serif;
-  font-weight:700;font-size:13px;color:#fff;
-  white-space:nowrap;transition:background .2s;letter-spacing:.3px;
-}
+.ns-btn{padding:0 18px;height:100%;background:var(--green);border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#fff;white-space:nowrap;transition:background .2s;letter-spacing:.3px}
 .ns-btn:hover{background:var(--green-dark)}
-
-/* Nav right */
-.nav-right{display:flex;align-items:center;gap:6px;margin-right:0;margin-left:auto;flex-shrink:0}
+ 
+/* ── NAV RIGHT ── */
+.nav-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 html[data-lang="ar"] .nav-right{margin-left:0;margin-right:auto}
-.nav-link{
-  padding:8px 14px;border-radius:8px;text-decoration:none;
-  color:var(--muted);font-size:13px;font-weight:500;
-  transition:all .2s;white-space:nowrap;
-}
+.nav-link{padding:8px 14px;border-radius:8px;text-decoration:none;color:var(--muted);font-size:13px;font-weight:500;transition:all .2s;white-space:nowrap}
 .nav-link:hover{color:var(--ink);background:var(--grey)}
-.btn-signin{
-  padding:9px 20px;border-radius:8px;background:var(--black);
-  color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;
-  border:none;cursor:pointer;transition:all .2s;white-space:nowrap;
-  display:flex;align-items:center;gap:7px;
-}
-.btn-signin:hover{background:#2a2a2a}
-.btn-signin svg{width:14px;height:14px;fill:currentColor}
-
-/* ══════════════════════════════════
-   HERO  (your design, refined)
-══════════════════════════════════ */
-.hero{
-  min-height:calc(100vh - 88px);
-  position:relative;overflow:hidden;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:60px clamp(16px,5vw,80px) 80px;
-  text-align:center;
-}
-
-/* Gradient blobs */
-.hero-bg{
-  position:absolute;inset:0;z-index:0;
-  background:
-    radial-gradient(ellipse 80% 70% at 15% 60%, rgba(29,185,84,.22) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 85% 20%, rgba(245,166,35,.14) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 60% at 50% 100%, rgba(29,185,84,.08) 0%, transparent 60%),
-    #fafaf8;
-}
-.hero-bg-circle{
-  position:absolute;border-radius:50%;border:1.5px solid rgba(29,185,84,.2);
-  animation:spin-slow 20s linear infinite;
-}
+.btn-signin{padding:9px 20px;border-radius:8px;background:var(--black);color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;border:none;cursor:pointer;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.btn-signin:hover{background:#222}
+ 
+/* ── HERO ── */
+.hero{min-height:calc(100vh - 88px);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px clamp(16px,5vw,80px) 80px;text-align:center}
+.hero-bg{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse 80% 70% at 15% 60%,rgba(29,185,84,.22) 0%,transparent 55%),radial-gradient(ellipse 60% 50% at 85% 20%,rgba(245,166,35,.14) 0%,transparent 55%),radial-gradient(ellipse 50% 60% at 50% 100%,rgba(29,185,84,.08) 0%,transparent 60%),#fafaf8}
+.hero-bg-circle{position:absolute;border-radius:50%;border:1.5px solid rgba(29,185,84,.2);animation:spin-slow 20s linear infinite}
 .hbc1{width:400px;height:400px;top:-100px;left:-120px}
 .hbc2{width:200px;height:200px;bottom:80px;right:60px;animation-duration:14s;animation-direction:reverse}
-@keyframes spin-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-
-/* Verified badge */
-.hero-badge{
-  position:relative;z-index:1;
-  display:inline-flex;align-items:center;gap:10px;
-  background:var(--white);border:1.5px solid var(--border);
-  border-radius:50px;padding:8px 20px 8px 12px;
-  font-size:13px;font-weight:500;color:var(--muted);
-  margin-bottom:36px;
-  box-shadow:var(--shadow);
-  animation:fade-up .6s ease both;
-}
-.badge-check{
-  width:22px;height:22px;background:var(--green);border-radius:5px;
-  display:grid;place-items:center;flex-shrink:0;
-}
-.badge-check svg{width:12px;height:12px;fill:#fff}
+@keyframes spin-slow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+ 
+.hero-badge{position:relative;z-index:1;display:inline-flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:50px;padding:8px 20px 8px 12px;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:36px;box-shadow:var(--shadow);animation:fade-up .6s ease both}
+.badge-check{width:22px;height:22px;background:var(--green);border-radius:5px;display:grid;place-items:center;flex-shrink:0}
+.badge-check svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .badge-verified{font-weight:700;color:var(--green)}
-
-/* HERO HEADLINE — mixed outline/filled like your screenshot */
-.hero-h1{
-  position:relative;z-index:1;
-  font-family:'Syne',sans-serif;
-  font-size:clamp(52px,10vw,110px);
-  line-height:1.0;font-weight:800;
-  letter-spacing:-3px;margin-bottom:16px;
-  animation:fade-up .6s ease .08s both;
-}
+ 
+.hero-h1{position:relative;z-index:1;font-family:'Syne',sans-serif;font-size:clamp(48px,9vw,100px);line-height:1.0;font-weight:800;letter-spacing:-3px;margin-bottom:16px;animation:fade-up .6s ease .08s both}
 .h1-filled{color:var(--black);display:block}
-.h1-outline{
-  display:block;
-  -webkit-text-stroke:2.5px var(--black);
-  color:transparent;
-}
+.h1-outline{display:block;-webkit-text-stroke:2.5px var(--black);color:transparent}
 .h1-green{color:var(--green)}
-.h1-outline-green{
-  -webkit-text-stroke:2.5px var(--green);
-  color:transparent;
-}
-
-/* Arabic subtitle */
-.hero-ar{
-  position:relative;z-index:1;
-  font-family:'Cairo',sans-serif;font-size:clamp(18px,3vw,28px);
-  font-weight:700;color:var(--muted);
-  letter-spacing:.5px;margin-bottom:24px;
-  animation:fade-up .6s ease .14s both;
-}
-
-/* Sub description */
-.hero-sub{
-  position:relative;z-index:1;
-  font-size:clamp(14px,1.8vw,17px);color:var(--muted);
-  max-width:520px;margin:0 auto 44px;line-height:1.75;
-  animation:fade-up .6s ease .2s both;
-}
+ 
+.hero-ar{position:relative;z-index:1;font-family:'Cairo',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:700;color:var(--muted);margin-bottom:20px;animation:fade-up .6s ease .14s both}
+.hero-sub{position:relative;z-index:1;font-size:clamp(14px,1.8vw,17px);color:var(--muted);max-width:520px;margin:0 auto 44px;line-height:1.75;animation:fade-up .6s ease .2s both}
 .hero-sub strong{color:var(--ink);font-weight:700}
-
-/* Hero search (big, below headline) */
-.hero-search{
-  position:relative;z-index:1;
-  display:flex;align-items:center;
-  background:var(--white);border:2px solid var(--black);
-  border-radius:14px;max-width:680px;width:100%;
-  box-shadow:6px 6px 0 var(--black);
-  overflow:hidden;margin:0 auto 20px;
-  animation:fade-up .6s ease .26s both;
-  transition:box-shadow .2s;
-}
+ 
+/* ── HERO SEARCH ── */
+.hero-search{position:relative;z-index:1;display:flex;align-items:center;background:var(--white);border:2px solid var(--black);border-radius:14px;max-width:680px;width:100%;box-shadow:6px 6px 0 var(--black);overflow:hidden;margin:0 auto 20px;animation:fade-up .6s ease .26s both;transition:box-shadow .2s}
 .hero-search:focus-within{box-shadow:6px 6px 0 var(--green)}
-.hs-what,.hs-where{
-  display:flex;align-items:center;gap:10px;
-  padding:0 18px;flex:1;
-}
+.hs-what,.hs-where{display:flex;align-items:center;gap:10px;padding:0 18px;flex:1}
 .hs-divider{width:1.5px;height:28px;background:var(--border);flex-shrink:0}
 .hs-icon{color:var(--muted);font-size:18px;flex-shrink:0}
-.hs-what input,.hs-where input{
-  border:none;outline:none;font-family:'DM Sans',sans-serif;
-  font-size:15px;color:var(--ink);background:transparent;width:100%;padding:16px 0;
-}
+.hs-what input,.hs-where input{border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--ink);background:transparent;width:100%;padding:16px 0}
 .hs-what input::placeholder,.hs-where input::placeholder{color:var(--dimmed)}
-.hs-go{
-  padding:0 28px;height:100%;min-height:58px;
-  background:var(--green);border:none;cursor:pointer;
-  font-family:'Syne',sans-serif;font-weight:700;font-size:14px;
-  color:#fff;transition:background .2s;white-space:nowrap;letter-spacing:.3px;
-  border-left:2px solid var(--black);
-}
-html[data-lang="ar"] .hs-go{border-left:none;border-right:2px solid var(--black)}
+.hs-go{padding:0 28px;height:100%;min-height:58px;background:var(--green);border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;transition:background .2s;white-space:nowrap;border-left:2px solid var(--black)}
 .hs-go:hover{background:var(--green-dark)}
-
-/* quick pills under search */
-.hero-pills{
-  position:relative;z-index:1;
-  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
-  animation:fade-up .6s ease .32s both;
-}
-.hpill{
-  padding:6px 16px;border-radius:50px;
-  background:var(--white);border:1.5px solid var(--border);
-  font-size:13px;font-weight:500;color:var(--muted);
-  cursor:pointer;transition:all .2s;
-}
+html[data-lang="ar"] .hs-go{border-left:none;border-right:2px solid var(--black)}
+ 
+.hero-pills{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;animation:fade-up .6s ease .32s both}
+.hpill{padding:6px 16px;border-radius:50px;background:var(--white);border:1.5px solid var(--border);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s}
 .hpill:hover{border-color:var(--green);color:var(--green);background:var(--green-light)}
-
-/* ══════════════════════════════════
-   STATS ROW
-══════════════════════════════════ */
-.stats-row{
-  background:var(--black);
-  padding:20px clamp(16px,5vw,80px);
-  display:flex;justify-content:center;align-items:center;gap:clamp(24px,6vw,80px);
-  flex-wrap:wrap;
-}
+ 
+/* ── STATS ── */
+.stats-row{background:var(--black);padding:20px clamp(16px,5vw,80px);display:flex;justify-content:center;align-items:center;gap:clamp(24px,6vw,80px);flex-wrap:wrap}
 .stat{text-align:center}
 .stat-n{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--green)}
 .stat-l{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px;font-weight:500}
 .stats-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.15)}
-
-/* ══════════════════════════════════
-   SHARED SECTION STYLES
-══════════════════════════════════ */
+ 
+/* ── SECTIONS ── */
 .section{padding:64px clamp(16px,5vw,80px)}
-
 .sec-row{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:32px}
-.sec-head{}
 .sec-eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .sec-eyebrow::before{content:'';width:18px;height:2px;background:var(--green);border-radius:2px}
 .sec-title{font-family:'Syne',sans-serif;font-size:clamp(22px,4vw,36px);font-weight:800;letter-spacing:-1px;line-height:1.2}
@@ -288,163 +118,72 @@ html[data-lang="ar"] .hs-go{border-left:none;border-right:2px solid var(--black)
 .sec-sub{font-size:13px;color:var(--muted);margin-top:4px}
 .see-all{font-size:13px;font-weight:700;color:var(--green);text-decoration:none;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:gap .2s}
 .see-all:hover{gap:9px}
-
-/* Tabs */
+ 
+/* ── TABS ── */
 .tabs{display:flex;gap:2px;background:var(--grey);border:1.5px solid var(--border);padding:3px;border-radius:9px;width:fit-content}
 .tab{padding:6px 16px;border-radius:6px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s}
 .tab.on{background:var(--white);color:var(--ink);box-shadow:0 1px 6px rgba(0,0,0,.08)}
-
-/* ══════════════════════════════════
-   CATEGORY PILLS (Yelp style row)
-══════════════════════════════════ */
-.cats-strip{
-  display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;
-  scrollbar-width:none;
-}
+ 
+/* ── CATEGORY PILLS ── */
+.cats-strip{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
 .cats-strip::-webkit-scrollbar{display:none}
-.cat-item{
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-  flex-shrink:0;cursor:pointer;text-decoration:none;color:var(--ink);
-  transition:transform .2s;
-}
+.cat-item{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;text-decoration:none;color:var(--ink);transition:transform .2s}
 .cat-item:hover{transform:translateY(-2px)}
-.cat-circle{
-  width:68px;height:68px;border-radius:50%;
-  background:var(--grey);border:2px solid var(--border);
-  display:grid;place-items:center;font-size:28px;
-  transition:all .25s;
-}
+.cat-circle{width:68px;height:68px;border-radius:50%;background:var(--grey);border:2px solid var(--border);display:grid;place-items:center;font-size:28px;transition:all .25s}
 .cat-item:hover .cat-circle{border-color:var(--green);background:var(--green-light);box-shadow:0 0 0 4px rgba(29,185,84,.1)}
 .cat-label{font-size:12px;font-weight:600;text-align:center;white-space:nowrap;color:var(--muted)}
 .cat-item:hover .cat-label{color:var(--green)}
-
-/* ══════════════════════════════════
-   BUSINESS CARDS (Yelp-style grid)
-══════════════════════════════════ */
-.biz-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-  gap:22px;
-}
-
-.biz-card{
-  background:var(--white);
-  border:1.5px solid var(--border);
-  border-radius:var(--radius-lg);
-  overflow:hidden;
-  text-decoration:none;color:var(--ink);
-  transition:all .25s;
-  display:flex;flex-direction:column;
-  position:relative;
-}
-.biz-card:hover{
-  transform:translateY(-4px);
-  box-shadow:var(--shadow-lg);
-  border-color:rgba(29,185,84,.3);
-}
-
+ 
+/* ── BUSINESS CARDS ── */
+.biz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
+.biz-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;text-decoration:none;color:var(--ink);transition:all .25s;display:flex;flex-direction:column;position:relative}
+.biz-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:rgba(29,185,84,.3)}
 .biz-img{height:180px;overflow:hidden;position:relative}
 .biz-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
 .biz-card:hover .biz-img img{transform:scale(1.04)}
-
-/* rank badge top-left */
-.biz-rank{
-  position:absolute;top:12px;left:12px;
-  width:30px;height:30px;background:var(--black);color:var(--green);
-  font-family:'Syne',sans-serif;font-weight:800;font-size:13px;
-  border-radius:8px;display:grid;place-items:center;
-}
+.biz-rank{position:absolute;top:12px;left:12px;width:30px;height:30px;background:var(--black);color:var(--green);font-family:'Syne',sans-serif;font-weight:800;font-size:13px;border-radius:8px;display:grid;place-items:center}
 html[data-lang="ar"] .biz-rank{left:auto;right:12px}
-
-.biz-badge{
-  position:absolute;top:12px;right:12px;
-  padding:4px 10px;border-radius:50px;font-size:10px;font-weight:700;letter-spacing:.5px;
-}
+.biz-badge{position:absolute;top:12px;right:12px;padding:4px 10px;border-radius:50px;font-size:10px;font-weight:700;letter-spacing:.5px}
 html[data-lang="ar"] .biz-badge{right:auto;left:12px}
 .bb-verified{background:rgba(29,185,84,.15);color:var(--green);border:1px solid rgba(29,185,84,.3)}
 .bb-hot{background:rgba(239,68,68,.12);color:#dc2626;border:1px solid rgba(239,68,68,.25)}
 .bb-new{background:rgba(245,166,35,.15);color:#b45309;border:1px solid rgba(245,166,35,.3)}
-
 .biz-body{padding:16px;display:flex;flex-direction:column;gap:8px;flex:1}
 .biz-top{display:flex;gap:12px;align-items:flex-start}
-.biz-logo{
-  width:46px;height:46px;border-radius:10px;background:var(--grey);
-  display:grid;place-items:center;font-size:22px;flex-shrink:0;
-  border:1.5px solid var(--border);
-}
+.biz-logo{width:46px;height:46px;border-radius:10px;background:var(--grey);display:grid;place-items:center;font-size:22px;flex-shrink:0;border:1.5px solid var(--border)}
 .biz-info{flex:1}
 .biz-name{font-weight:700;font-size:16px;line-height:1.25}
 .biz-cat{font-size:11px;color:var(--green);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
-
-/* rating */
 .biz-rating{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .stars{display:flex;gap:1px}
 .star{font-size:13px;color:var(--star)}
 .star.e{color:var(--border)}
 .r-num{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--ink)}
 .r-count{font-size:12px;color:var(--muted)}
-
 .biz-desc{font-size:13px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-
-.biz-footer{
-  display:flex;align-items:center;justify-content:space-between;
-  padding-top:10px;border-top:1px solid var(--border);margin-top:auto;flex-wrap:wrap;gap:8px;
-}
+.biz-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);margin-top:auto;flex-wrap:wrap;gap:8px}
 .biz-loc{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
-.biz-honest{
-  display:flex;align-items:center;gap:4px;
-  background:var(--green-light);color:var(--green-dark);
-  font-size:10px;font-weight:700;padding:3px 10px;border-radius:50px;
-  border:1px solid rgba(29,185,84,.25);
-}
-
-/* ══════════════════════════════════
-   REVIEWS SECTION (Yelp-style)
-══════════════════════════════════ */
+.biz-honest{display:flex;align-items:center;gap:4px;background:var(--green-light);color:var(--green-dark);font-size:10px;font-weight:700;padding:3px 10px;border-radius:50px;border:1px solid rgba(29,185,84,.25)}
+ 
+/* ── REVIEWS ── */
 .reviews-col{display:flex;flex-direction:column;gap:0}
-
-.review-card{
-  background:var(--white);border:1.5px solid var(--border);
-  border-radius:var(--radius-lg);padding:22px;
-  transition:all .22s;margin-bottom:16px;
-}
+.review-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:22px;transition:all .22s;margin-bottom:16px}
 .review-card:hover{border-color:rgba(29,185,84,.3);box-shadow:var(--shadow)}
-
 .rv-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
-.rv-av{
-  width:42px;height:42px;border-radius:50%;
-  display:grid;place-items:center;font-weight:700;font-size:17px;
-  flex-shrink:0;
-}
+.rv-av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:17px;flex-shrink:0}
 .rv-meta{flex:1}
 .rv-name{font-weight:700;font-size:14px}
 .rv-info{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;font-size:12px;color:var(--muted)}
 .rv-ver{background:var(--green-light);color:var(--green-dark);font-size:10px;font-weight:700;padding:2px 8px;border-radius:50px;border:1px solid rgba(29,185,84,.25)}
-
-.rv-biz-tag{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--grey);color:var(--ink);
-  font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;
-  margin-bottom:10px;border:1px solid var(--border);
-}
-
+.rv-biz-tag{display:inline-flex;align-items:center;gap:6px;background:var(--grey);color:var(--ink);font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;margin-bottom:10px;border:1px solid var(--border)}
 .rv-text{font-size:14px;color:#3a3a38;line-height:1.75}
-
 .rv-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.rv-btn{
-  display:flex;align-items:center;gap:5px;
-  background:var(--grey);border:1px solid var(--border);
-  color:var(--muted);font-size:12px;font-weight:600;
-  padding:5px 13px;border-radius:50px;cursor:pointer;
-  font-family:'DM Sans',sans-serif;transition:all .2s;
-}
+.rv-btn{display:flex;align-items:center;gap:5px;background:var(--grey);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;padding:5px 13px;border-radius:50px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .rv-btn:hover{background:var(--green-light);color:var(--green-dark);border-color:rgba(29,185,84,.3)}
 .rv-time{font-size:11px;color:var(--dimmed);margin-left:auto;align-self:center}
 html[data-lang="ar"] .rv-time{margin-left:0;margin-right:auto}
-
-/* ══════════════════════════════════
-   HOW IT WORKS (Yelp-style 3-col)
-══════════════════════════════════ */
+ 
+/* ── HOW IT WORKS ── */
 .how-section{background:var(--black);color:#fff}
 .how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius-lg);overflow:hidden;margin-top:48px}
 .how-step{padding:40px 32px;background:var(--black);transition:background .25s}
@@ -453,80 +192,44 @@ html[data-lang="ar"] .rv-time{margin-left:0;margin-right:auto}
 .how-icon{font-size:32px;margin-bottom:14px}
 .how-h{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:8px}
 .how-p{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7}
-
-/* ══════════════════════════════════
-   MANIFESTO BANNER
-══════════════════════════════════ */
-.manifesto{
-  background:var(--green);padding:80px clamp(24px,6vw,100px);
-  text-align:center;position:relative;overflow:hidden;
-}
-.manifesto::before{
-  content:'';position:absolute;top:-40px;right:-60px;
-  width:300px;height:300px;border-radius:50%;
-  background:rgba(0,0,0,.06);
-}
-.manifesto::after{
-  content:'';position:absolute;bottom:-60px;left:-40px;
-  width:240px;height:240px;border-radius:50%;
-  background:rgba(0,0,0,.04);
-}
+ 
+/* ── MANIFESTO ── */
+.manifesto{background:var(--green);padding:80px clamp(24px,6vw,100px);text-align:center;position:relative;overflow:hidden}
+.manifesto::before{content:'';position:absolute;top:-40px;right:-60px;width:300px;height:300px;border-radius:50%;background:rgba(0,0,0,.06)}
+.manifesto::after{content:'';position:absolute;bottom:-60px;left:-40px;width:240px;height:240px;border-radius:50%;background:rgba(0,0,0,.04)}
 .manifesto-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
-.manifesto h2{
-  font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,56px);
-  font-weight:800;letter-spacing:-2px;color:var(--black);
-  line-height:1.15;margin-bottom:20px;
-}
+.manifesto h2{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,52px);font-weight:800;letter-spacing:-2px;color:var(--black);line-height:1.15;margin-bottom:20px}
 .manifesto h2 em{font-style:normal;color:var(--white)}
 .manifesto p{font-size:clamp(14px,1.8vw,17px);color:rgba(0,0,0,.65);line-height:1.8;margin-bottom:36px}
-.btn-black{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:14px 36px;border-radius:10px;
-  background:var(--black);color:#fff;
-  font-family:'Syne',sans-serif;font-weight:700;font-size:15px;
-  border:none;cursor:pointer;transition:all .2s;text-decoration:none;
-  box-shadow:4px 4px 0 rgba(0,0,0,.3);
-}
+.btn-black{display:inline-flex;align-items:center;gap:8px;padding:14px 36px;border-radius:10px;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;box-shadow:4px 4px 0 rgba(0,0,0,.3)}
 .btn-black:hover{transform:translateY(-2px);box-shadow:4px 6px 0 rgba(0,0,0,.3)}
-
-/* ══════════════════════════════════
-   WRITE REVIEW FLOAT BAR
-══════════════════════════════════ */
-.float-bar{
-  position:fixed;bottom:0;left:0;right:0;z-index:90;
-  background:rgba(255,255,255,.95);backdrop-filter:blur(16px);
-  border-top:1.5px solid var(--border);
-  padding:10px clamp(16px,4vw,60px);
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-}
+ 
+/* ── FLOAT BAR ── */
+.float-bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);border-top:1.5px solid var(--border);padding:10px clamp(16px,4vw,60px);display:flex;align-items:center;justify-content:space-between;gap:16px}
 .float-bar p{font-size:13px;color:var(--muted)}
 .float-bar strong{color:var(--ink)}
-.btn-write{
-  display:flex;align-items:center;gap:7px;
-  padding:10px 22px;border-radius:9px;
-  background:var(--black);color:#fff;
-  font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;
-  border:none;cursor:pointer;transition:all .2s;
-}
+.btn-write{display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:9px;background:var(--black);color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;border:none;cursor:pointer;transition:all .2s}
 .btn-write:hover{background:var(--green);color:#000}
-
-/* ══════════════════════════════════
-   MODALS
-══════════════════════════════════ */
-.overlay{
-  position:fixed;inset:0;background:rgba(13,13,13,.7);
-  backdrop-filter:blur(12px);z-index:200;
-  display:none;place-items:center;padding:20px;
-}
+ 
+/* ── FOOTER ── */
+footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16px,5vw,80px) 100px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr}}
+.footer-logo-wordmark{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--white);letter-spacing:-1px;display:inline-flex;align-items:center;gap:0;margin-bottom:14px}
+.footer-logo-2{color:var(--green)}
+.footer-logo-line{display:block;width:100%;height:2px;background:var(--green);border-radius:2px;margin-top:2px}
+.footer-brand p{font-size:13px;line-height:1.7;max-width:240px;color:rgba(255,255,255,.4);margin-top:8px}
+.fc h4{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px}
+.fc a{display:block;color:rgba(255,255,255,.45);text-decoration:none;font-size:13px;margin-bottom:9px;transition:color .2s}
+.fc a:hover{color:var(--green)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.07);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px}
+.footer-bottom span{color:rgba(255,255,255,.2)}
+.footer-bottom strong{color:var(--green)}
+ 
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(13,13,13,.7);backdrop-filter:blur(12px);z-index:200;display:none;place-items:center;padding:20px}
 .overlay.open{display:grid}
-
-.modal{
-  background:var(--white);border-radius:var(--radius-lg);
-  padding:clamp(24px,4vw,44px);
-  max-width:520px;width:100%;max-height:90vh;overflow-y:auto;
-  animation:modal-pop .3s cubic-bezier(.34,1.56,.64,1);
-  border-top:4px solid var(--green);
-}
+.modal{background:var(--white);border-radius:var(--radius-lg);padding:clamp(24px,4vw,44px);max-width:520px;width:100%;max-height:90vh;overflow-y:auto;animation:modal-pop .3s cubic-bezier(.34,1.56,.64,1);border-top:4px solid var(--green)}
 @keyframes modal-pop{from{transform:translateY(24px) scale(.97);opacity:0}to{transform:none;opacity:1}}
 .m-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
 .m-title{font-family:'Syne',sans-serif;font-weight:800;font-size:20px}
@@ -544,181 +247,207 @@ html[data-lang="ar"] .rv-time{margin-left:0;margin-right:auto}
 .m-note{background:var(--green-light);border:1px solid rgba(29,185,84,.25);border-radius:9px;padding:12px 14px;font-size:12px;color:var(--green-dark);display:flex;gap:9px;line-height:1.6;margin-bottom:18px}
 .btn-submit{width:100%;padding:14px;background:var(--black);color:#fff;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-submit:hover{background:var(--green);color:#000}
-
-/* rating bars */
 .rbar{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .rbar-lbl{font-size:11px;color:var(--muted);width:18px;text-align:right;font-weight:600}
 .rbar-track{flex:1;height:7px;background:var(--grey);border-radius:4px;overflow:hidden}
 .rbar-fill{height:100%;background:var(--green);border-radius:4px;transition:width 1s ease}
 .rbar-pct{font-size:11px;color:var(--muted);width:28px}
-
-/* ══════════════════════════════════
-   TOAST
-══════════════════════════════════ */
-.toast{
-  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(8px);
-  background:var(--black);color:var(--green);
-  padding:12px 24px;border-radius:50px;
-  font-size:14px;font-weight:700;z-index:300;
-  display:none;align-items:center;gap:10px;
-  border:1px solid rgba(29,185,84,.3);
-  box-shadow:0 4px 20px rgba(0,0,0,.2);
-  transition:transform .3s,opacity .3s;font-family:'Syne',sans-serif;
-}
+ 
+/* ── AUTH MODAL ── */
+#modal-auth .modal{max-width:420px;padding:0;border-top:none;overflow:hidden}
+.auth-top-bar{height:5px;background:linear-gradient(90deg,var(--green),#0fa844);border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+.auth-body{padding:32px 32px 28px;text-align:center}
+ 
+/* Logo in modal */
+.auth-logo{display:inline-flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative}
+.auth-logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--black);letter-spacing:-1px;line-height:1;padding-bottom:4px;position:relative}
+.auth-logo-text::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--green);border-radius:2px}
+.auth-logo-2{color:var(--green)}
+ 
+/* Method toggle: Email / Phone */
+.auth-method-toggle{display:flex;gap:3px;background:var(--grey);border:1.5px solid var(--border);border-radius:10px;padding:3px;margin-bottom:24px}
+.method-btn{flex:1;padding:9px;border-radius:7px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.method-btn.on{background:var(--white);color:var(--ink);box-shadow:0 1px 6px rgba(0,0,0,.1)}
+ 
+/* Step dots */
+.auth-steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px}
+.auth-step-dot{width:26px;height:26px;border-radius:50%;background:var(--grey);border:2px solid var(--border);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--dimmed);transition:all .3s;flex-shrink:0}
+.auth-step-dot.done{background:var(--green);border-color:var(--green);color:#fff}
+.auth-step-dot.active{background:var(--black);border-color:var(--black);color:#fff}
+.auth-step-line{width:36px;height:2px;background:var(--border);transition:background .3s;flex-shrink:0}
+.auth-step-line.done{background:var(--green)}
+.auth-panel{display:none}
+.auth-panel.active{display:block}
+ 
+.auth-title{font-family:'Syne',sans-serif;font-weight:800;font-size:21px;color:var(--ink);margin-bottom:6px}
+.auth-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px}
+.auth-sub strong{color:var(--ink)}
+ 
+/* Input wrappers */
+.input-icon-wrap{position:relative;margin-bottom:14px}
+.input-icon-wrap .input-icon{position:absolute;top:50%;transform:translateY(-50%);left:14px;font-size:16px;color:var(--muted);pointer-events:none}
+html[data-lang="ar"] .input-icon-wrap .input-icon{left:auto;right:14px}
+.input-icon-wrap .fi{padding-left:42px}
+html[data-lang="ar"] .input-icon-wrap .fi{padding-left:14px;padding-right:42px}
+ 
+/* Phone row */
+.phone-wrap{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;transition:border-color .2s,box-shadow .2s;background:var(--paper)}
+.phone-wrap:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,185,84,.12)}
+.phone-flag{padding:0 12px;font-size:18px;border-right:1.5px solid var(--border);background:var(--grey);height:48px;display:flex;align-items:center;gap:5px;flex-shrink:0}
+html[data-lang="ar"] .phone-flag{border-right:none;border-left:1.5px solid var(--border)}
+.phone-code{font-size:12px;font-weight:700;color:var(--muted)}
+.phone-input{flex:1;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:16px;padding:12px 14px;background:transparent;color:var(--ink);letter-spacing:.5px}
+.phone-input::placeholder{color:var(--dimmed)}
+ 
+/* OTP boxes */
+.otp-wrap{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.otp-box{width:48px;height:56px;border:2px solid var(--border);border-radius:10px;font-family:'Syne',sans-serif;font-weight:800;font-size:22px;text-align:center;outline:none;background:var(--paper);color:var(--ink);transition:all .2s;caret-color:var(--green)}
+.otp-box:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,185,84,.12);background:#fff}
+.otp-box.filled{border-color:var(--green);background:var(--green-light)}
+.otp-box.error{border-color:#ef4444;background:#fef2f2;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+ 
+.otp-timer{font-size:12px;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:6px}
+.otp-timer span{color:var(--green);font-weight:700}
+.resend-btn{background:none;border:none;cursor:pointer;color:var(--green);font-weight:700;font-size:12px;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:0;display:none}
+.resend-btn.show{display:inline}
+ 
+/* Name step avatar */
+.name-avatar{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:#fff;margin:0 auto 18px;transition:background .3s}
+ 
+/* Auth button */
+.auth-btn{width:100%;padding:14px;background:var(--black);color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden}
+.auth-btn:hover:not(:disabled){background:var(--green);color:#000}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-btn .btn-text{transition:opacity .2s}
+.auth-btn.loading .btn-text{opacity:0}
+.auth-spinner{position:absolute;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.auth-btn.loading .auth-spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+ 
+/* Success */
+.success-circle{width:68px;height:68px;background:var(--green);border-radius:50%;display:grid;place-items:center;margin:0 auto 16px;font-size:30px;animation:pop-in .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop-in{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+ 
+.auth-error{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:12px;color:#dc2626;margin-bottom:14px;display:none;text-align:left}
+.auth-error.show{display:block}
+.auth-note{font-size:11px;color:var(--dimmed);margin-top:12px;line-height:1.5}
+.back-link{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;margin-top:10px;font-family:'DM Sans',sans-serif;display:block;width:100%;text-align:center}
+ 
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--black);color:var(--green);padding:12px 24px;border-radius:50px;font-size:14px;font-weight:700;z-index:300;display:none;align-items:center;gap:10px;border:1px solid rgba(29,185,84,.3);box-shadow:0 4px 20px rgba(0,0,0,.2);transition:transform .3s,opacity .3s;font-family:'Syne',sans-serif}
 .toast.on{display:flex;transform:translateX(-50%) translateY(0)}
-
-/* ══════════════════════════════════
-   FOOTER
-══════════════════════════════════ */
-footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16px,5vw,80px) 100px}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
-@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr}}
-.footer-brand{}
-.footer-brand-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.footer-brand-logo .logo-icon{background:var(--green);color:var(--black)}
-.footer-brand-logo .logo-en{color:var(--white)}
-.footer-brand-logo .logo-ar{color:rgba(255,255,255,.4)}
-.footer-brand p{font-size:13px;line-height:1.7;max-width:240px;color:rgba(255,255,255,.4)}
-.fc h4{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px}
-.fc a{display:block;color:rgba(255,255,255,.45);text-decoration:none;font-size:13px;margin-bottom:9px;transition:color .2s}
-.fc a:hover{color:var(--green)}
-.footer-bottom{border-top:1px solid rgba(255,255,255,.07);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px}
-.footer-bottom span{color:rgba(255,255,255,.2)}
-.footer-bottom strong{color:var(--green)}
-
+ 
 /* ── ANIMATIONS ── */
 @keyframes fade-up{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
 .reveal.visible{opacity:1;transform:none}
-
+ 
 /* ── RESPONSIVE ── */
-@media(max-width:700px){
-  .nav-search{display:none}
-  .float-bar p{display:none}
-  .biz-grid{grid-template-columns:1fr}
-  .hero-h1{letter-spacing:-2px}
-  .hs-where{display:none}
-  .hs-divider{display:none}
-  nav .nav-right .nav-link{display:none}
-}
-
-/* scrollbar */
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(29,185,84,.35);border-radius:3px}
+@media(max-width:700px){.nav-search{display:none}.float-bar p{display:none}.biz-grid{grid-template-columns:1fr}.hero-h1{letter-spacing:-2px}.hs-where,.hs-divider{display:none}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(29,185,84,.35);border-radius:3px}
 </style>
 </head>
 <body>
-
+ 
 <!-- ══ TOP BAR ══ -->
 <div class="top-bar">
   <span class="en">🇪🇬 Egypt's first 100% honest review platform</span>
   <span class="ar">🇪🇬 أول منصة مراجعات أمينة 100٪ في مصر</span>
   <div class="top-bar-right">
-    <span class="en">No fake stars. No paid rankings. <a href="#">Learn how →</a></span>
-    <span class="ar">لا نجوم مزيّفة. لا ترتيب مدفوع. <a href="#">اعرف أكثر →</a></span>
+    <span class="en">No fake stars. No paid rankings. <a href="#how">Learn how →</a></span>
+    <span class="ar">لا نجوم مزيّفة. لا ترتيب مدفوع. <a href="#how">اعرف أكثر →</a></span>
     <div class="lang-switch">
       <button class="lbtn" onclick="setLang('ar')">ع</button>
       <button class="lbtn on" onclick="setLang('en')">EN</button>
     </div>
   </div>
 </div>
-
-<!-- ══ NAVBAR (Yelp-style) ══ -->
+ 
+<!-- ══ NAVBAR ══ -->
 <nav>
-  <!-- Logo -->
+  <!-- LOGO: Ra2y with green 2 and green underline -->
   <a class="logo" href="#">
-    <svg viewBox="0 0 320 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="رأي الناس للناس">
-      <!-- green dot left -->
-      <circle cx="8" cy="24" r="5" fill="#1db954"/>
-      <!-- Full Arabic wordmark -->
-      <text x="300" y="34" font-size="32" font-weight="900" text-anchor="end"
-        font-family="Cairo,sans-serif" fill="#0d0d0d">
-        <tspan fill="#0d0d0d">رأي </tspan><tspan fill="#1db954">الناس</tspan><tspan fill="#0d0d0d"> للناس</tspan>
-      </text>
-      <!-- green dot right -->
-      <circle cx="312" cy="24" r="5" fill="#1db954"/>
-      <!-- Ra2y tiny under -->
-      <text x="160" y="46" font-size="9" font-weight="700" text-anchor="middle"
-        font-family="'Syne',system-ui,sans-serif" fill="#b0b0a8" letter-spacing="2">Ra2y</text>
-    </svg>
+    <span class="logo-dot"></span>
+    <span class="logo-wordmark">Ra<span class="logo-2">2</span>y</span>
   </a>
-
-  <!-- Search -->
+ 
+  <!-- Nav Search -->
   <div class="nav-search">
-    <div class="hs-what" style="border:none;border-radius:0;box-shadow:none">
+    <div class="ns-what">
       <span class="ns-icon">🔍</span>
-      <input type="text" placeholder-en="Restaurants, doctors, salons…" placeholder-ar="مطاعم، دكاترة، صالونات…" placeholder="Restaurants, doctors, salons…"/>
+      <input type="text" id="navSearch"
+        placeholder-en="Restaurants, doctors, salons…"
+        placeholder-ar="مطاعم، دكاترة، صالونات…"
+        placeholder="Restaurants, doctors, salons…"
+        onkeydown="if(event.key==='Enter') handleSearch()"/>
     </div>
-    <div class="hs-divider"></div>
-    <div class="hs-what">
+    <div class="ns-div"></div>
+    <div class="ns-what">
       <span class="ns-icon">📍</span>
-      <input type="text" placeholder-en="Cairo, Giza…" placeholder-ar="القاهرة، الجيزة…" placeholder="Cairo, Giza…"/>
+      <input type="text"
+        placeholder-en="Cairo, Giza…"
+        placeholder-ar="القاهرة، الجيزة…"
+        placeholder="Cairo, Giza…"/>
     </div>
-    <button class="ns-btn en" onclick="scrollToBiz()">Search</button>
-    <button class="ns-btn ar" onclick="scrollToBiz()">بحث</button>
+    <button class="ns-btn en" onclick="handleSearch()">Search</button>
+    <button class="ns-btn ar" onclick="handleSearch()">بحث</button>
   </div>
-
-  <!-- Nav Right -->
+ 
   <div class="nav-right">
-    <a class="nav-link en" href="#" onclick="openModal('write');return false">Write a Review</a>
-    <a class="nav-link ar" href="#" onclick="openModal('write');return false">اكتب رأيك</a>
+    <a class="nav-link en" href="#" onclick="openWriteReview();return false">Write a Review</a>
+    <a class="nav-link ar" href="#" onclick="openWriteReview();return false">اكتب رأيك</a>
     <a class="nav-link en" href="#">Add Business</a>
     <a class="nav-link ar" href="#">أضف مكانك</a>
     <button class="btn-signin" onclick="openModal('auth')">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-      <span class="en">Sign In</span>
-      <span class="ar">دخول</span>
+      👤 <span class="en">Sign In</span><span class="ar">دخول</span>
     </button>
   </div>
 </nav>
-
+ 
 <!-- ══ HERO ══ -->
 <div class="hero">
   <div class="hero-bg">
     <div class="hero-bg-circle hbc1"></div>
     <div class="hero-bg-circle hbc2"></div>
   </div>
-
-  <!-- Verified badge (just like your design) -->
+ 
   <div class="hero-badge">
     <div class="badge-check">
-      <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
     <span class="en">100% Real Reviews — Zero Fake Ratings</span>
     <span class="ar">١٠٠٪ آراء حقيقية — صفر تزوير</span>
     <span class="badge-verified en">Verified</span>
     <span class="badge-verified ar">موثّق</span>
   </div>
-
-  <!-- HEADLINE — mixed filled + outline like your screenshot -->
+ 
   <h1 class="hero-h1">
     <span class="en">
-      <span class="h1-filled">The <span class="h1-outline">Honest</span></span>
+      <span class="h1-filled">The <span class="h1-outline" style="-webkit-text-stroke:2.5px #0d0d0d">Honest</span></span>
       <span class="h1-filled">Guide to <span class="h1-green">Egypt</span></span>
     </span>
     <span class="ar">
-      <span class="h1-filled">الدليل <span class="h1-outline">الأمين</span></span>
+      <span class="h1-filled">الدليل <span class="h1-outline" style="-webkit-text-stroke:2.5px #0d0d0d">الأمين</span></span>
       <span class="h1-filled">لـ<span class="h1-green">مصر</span></span>
     </span>
   </h1>
-
-  <!-- Arabic tagline (shows in both languages) -->
+ 
   <p class="hero-ar">رأي الناس — للناس</p>
-
+ 
   <p class="hero-sub">
-    <span class="en"><strong>Ra2y</strong> is Egypt's first truly honest review platform. No paid rankings. No fake stars. Just real Egyptians helping each other find the best places — big or small.</span>
+    <span class="en"><strong>Ra2y</strong> is Egypt's first truly honest review platform. No paid rankings. No fake stars. Just real Egyptians helping each other find the best places.</span>
     <span class="ar"><strong>را٢ي</strong> هي أول منصة مراجعات أمينة في مصر. لا ترتيب مدفوع. لا نجوم مزيّفة. فقط مصريين حقيقيين يساعدوا بعض.</span>
   </p>
-
-  <!-- BIG SEARCH BAR -->
+ 
   <div class="hero-search">
     <div class="hs-what">
       <span class="hs-icon">🔍</span>
       <input type="text" id="heroWhat"
         placeholder-en="Find restaurants, doctors, salons…"
         placeholder-ar="ابحث عن مطاعم، دكاترة، صالونات…"
-        placeholder="Find restaurants, doctors, salons…"/>
+        placeholder="Find restaurants, doctors, salons…"
+        onkeydown="if(event.key==='Enter') handleSearch()"/>
     </div>
     <div class="hs-divider"></div>
     <div class="hs-where">
@@ -728,10 +457,10 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
         placeholder-ar="القاهرة، الجيزة، الإسكندرية…"
         placeholder="Cairo, Giza, Alexandria…"/>
     </div>
-    <button class="hs-go en" onclick="scrollToBiz()">Search</button>
-    <button class="hs-go ar" onclick="scrollToBiz()">بحث</button>
+    <button class="hs-go en" onclick="handleSearch()">Search</button>
+    <button class="hs-go ar" onclick="handleSearch()">بحث</button>
   </div>
-
+ 
   <div class="hero-pills">
     <span class="hpill" onclick="fill('Restaurants')">🍽 <span class="en">Restaurants</span><span class="ar">مطاعم</span></span>
     <span class="hpill" onclick="fill('Cafés')">☕ <span class="en">Cafés</span><span class="ar">كافيهات</span></span>
@@ -742,22 +471,22 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
     <span class="hpill" onclick="fill('Shopping')">🛍 <span class="en">Shopping</span><span class="ar">تسوق</span></span>
   </div>
 </div>
-
+ 
 <!-- ══ STATS ══ -->
 <div class="stats-row">
-  <div class="stat"><div class="stat-n">48,200+</div><div class="stat-l en">Real Reviews</div><div class="stat-l ar">رأي حقيقي</div></div>
+  <div class="stat"><div class="stat-n" id="statReviews">—</div><div class="stat-l en">Real Reviews</div><div class="stat-l ar">رأي حقيقي</div></div>
   <div class="stats-dot"></div>
-  <div class="stat"><div class="stat-n">8,900+</div><div class="stat-l en">Places Listed</div><div class="stat-l ar">مكان مسجّل</div></div>
+  <div class="stat"><div class="stat-n" id="statBiz">—</div><div class="stat-l en">Places Listed</div><div class="stat-l ar">مكان مسجّل</div></div>
   <div class="stats-dot"></div>
   <div class="stat"><div class="stat-n">23,000+</div><div class="stat-l en">Verified Users</div><div class="stat-l ar">مستخدم موثّق</div></div>
   <div class="stats-dot"></div>
   <div class="stat"><div class="stat-n">98%</div><div class="stat-l en">Authentic Reviews</div><div class="stat-l ar">آراء أصلية مُفلترة</div></div>
 </div>
-
-<!-- ══ CATEGORIES (Yelp circular icons) ══ -->
+ 
+<!-- ══ CATEGORIES ══ -->
 <div class="section reveal">
   <div class="sec-row">
-    <div class="sec-head">
+    <div>
       <div class="sec-eyebrow en">Browse by Category</div>
       <div class="sec-eyebrow ar">تصفّح حسب الفئة</div>
       <h2 class="sec-title en">What are you looking <span>for?</span></h2>
@@ -765,25 +494,25 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
     </div>
   </div>
   <div class="cats-strip">
-    <a class="cat-item" href="#"><div class="cat-circle">🍽</div><span class="cat-label en">Restaurants</span><span class="cat-label ar">مطاعم</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">☕</div><span class="cat-label en">Cafés</span><span class="cat-label ar">كافيهات</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">🏥</div><span class="cat-label en">Clinics</span><span class="cat-label ar">عيادات</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">💇</div><span class="cat-label en">Salons</span><span class="cat-label ar">صالونات</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">🛍</div><span class="cat-label en">Shopping</span><span class="cat-label ar">تسوق</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">🏨</div><span class="cat-label en">Hotels</span><span class="cat-label ar">فنادق</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">💪</div><span class="cat-label en">Gyms</span><span class="cat-label ar">جيم</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">🎓</div><span class="cat-label en">Education</span><span class="cat-label ar">تعليم</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">🔧</div><span class="cat-label en">Services</span><span class="cat-label ar">خدمات</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">✈️</div><span class="cat-label en">Tourism</span><span class="cat-label ar">سياحة</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">🎭</div><span class="cat-label en">Events</span><span class="cat-label ar">فعاليات</span></a>
-    <a class="cat-item" href="#"><div class="cat-circle">🐾</div><span class="cat-label en">Vets</span><span class="cat-label ar">بيطري</span></a>
+    <a class="cat-item" href="#" onclick="fill('Restaurants');handleSearch();return false"><div class="cat-circle">🍽</div><span class="cat-label en">Restaurants</span><span class="cat-label ar">مطاعم</span></a>
+    <a class="cat-item" href="#" onclick="fill('Cafés');handleSearch();return false"><div class="cat-circle">☕</div><span class="cat-label en">Cafés</span><span class="cat-label ar">كافيهات</span></a>
+    <a class="cat-item" href="#" onclick="fill('Clinics');handleSearch();return false"><div class="cat-circle">🏥</div><span class="cat-label en">Clinics</span><span class="cat-label ar">عيادات</span></a>
+    <a class="cat-item" href="#" onclick="fill('Salons');handleSearch();return false"><div class="cat-circle">💇</div><span class="cat-label en">Salons</span><span class="cat-label ar">صالونات</span></a>
+    <a class="cat-item" href="#" onclick="fill('Shopping');handleSearch();return false"><div class="cat-circle">🛍</div><span class="cat-label en">Shopping</span><span class="cat-label ar">تسوق</span></a>
+    <a class="cat-item" href="#" onclick="fill('Hotels');handleSearch();return false"><div class="cat-circle">🏨</div><span class="cat-label en">Hotels</span><span class="cat-label ar">فنادق</span></a>
+    <a class="cat-item" href="#" onclick="fill('Gyms');handleSearch();return false"><div class="cat-circle">💪</div><span class="cat-label en">Gyms</span><span class="cat-label ar">جيم</span></a>
+    <a class="cat-item" href="#" onclick="fill('Education');handleSearch();return false"><div class="cat-circle">🎓</div><span class="cat-label en">Education</span><span class="cat-label ar">تعليم</span></a>
+    <a class="cat-item" href="#" onclick="fill('Services');handleSearch();return false"><div class="cat-circle">🔧</div><span class="cat-label en">Services</span><span class="cat-label ar">خدمات</span></a>
+    <a class="cat-item" href="#" onclick="fill('Tourism');handleSearch();return false"><div class="cat-circle">✈️</div><span class="cat-label en">Tourism</span><span class="cat-label ar">سياحة</span></a>
+    <a class="cat-item" href="#" onclick="fill('Events');handleSearch();return false"><div class="cat-circle">🎭</div><span class="cat-label en">Events</span><span class="cat-label ar">فعاليات</span></a>
+    <a class="cat-item" href="#" onclick="fill('Vets');handleSearch();return false"><div class="cat-circle">🐾</div><span class="cat-label en">Vets</span><span class="cat-label ar">بيطري</span></a>
   </div>
 </div>
-
-<!-- ══ BUSINESSES (Yelp listing grid) ══ -->
-<div class="section reveal" id="businesses" style="background:var(--grey);border-radius:0">
+ 
+<!-- ══ BUSINESSES ══ -->
+<div class="section reveal" id="businesses" style="background:var(--grey)">
   <div class="sec-row">
-    <div class="sec-head">
+    <div>
       <div class="sec-eyebrow en">Top Rated Near You</div>
       <div class="sec-eyebrow ar">الأعلى تقييماً</div>
       <h2 class="sec-title en">Highest <span>Rated</span> Places</h2>
@@ -804,220 +533,19 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
       <a class="see-all ar" href="#">عرض الكل →</a>
     </div>
   </div>
-
-  <div class="biz-grid">
-
-    <!-- Card 1 -->
-    <a class="biz-card" href="#" onclick="openModal('biz');return false;">
-      <div class="biz-img">
-        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=700&q=80" alt="Restaurant">
-        <div class="biz-rank">#1</div>
-        <div class="biz-badge bb-verified en">✓ Verified</div>
-        <div class="biz-badge bb-verified ar">✓ موثّق</div>
-      </div>
-      <div class="biz-body">
-        <div class="biz-top">
-          <div class="biz-logo">🍽</div>
-          <div class="biz-info">
-            <div class="biz-name en">Al Bayt Al Kabeer</div>
-            <div class="biz-name ar">مطعم البيت الكبير</div>
-            <div class="biz-cat en">Arabic Cuisine</div>
-            <div class="biz-cat ar">مطاعم عربية</div>
-          </div>
-          <div><span class="r-num">4.8</span></div>
-        </div>
-        <div class="biz-rating">
-          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
-          <span class="r-count en">(247 reviews)</span>
-          <span class="r-count ar">(٢٤٧ رأي)</span>
-        </div>
-        <p class="biz-desc en">Authentic home-style Arabic cooking, generous portions at fair prices. Great family atmosphere with fast, friendly service.</p>
-        <p class="biz-desc ar">أكل بيتي أصيل، الكمية كبيرة والسعر مناسب. الخدمة سريعة والجو عائلي هادي جداً.</p>
-        <div class="biz-footer">
-          <span class="biz-loc">📍 <span class="en">Zamalek, Cairo</span><span class="ar">الزمالك، القاهرة</span></span>
-          <span class="biz-honest en">✓ Real reviews only</span>
-          <span class="biz-honest ar">✓ آراء أصلية فقط</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 2 -->
-    <a class="biz-card" href="#" onclick="openModal('biz');return false;">
-      <div class="biz-img">
-        <img src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=700&q=80" alt="Salon">
-        <div class="biz-rank">#2</div>
-        <div class="biz-badge bb-new en">✦ New</div>
-        <div class="biz-badge bb-new ar">✦ جديد</div>
-      </div>
-      <div class="biz-body">
-        <div class="biz-top">
-          <div class="biz-logo">💇</div>
-          <div class="biz-info">
-            <div class="biz-name en">Ibda3 Salon</div>
-            <div class="biz-name ar">صالون لمسة إبداع</div>
-            <div class="biz-cat en">Hair Salon</div>
-            <div class="biz-cat ar">صالون حلاقة</div>
-          </div>
-          <div><span class="r-num">4.6</span></div>
-        </div>
-        <div class="biz-rating">
-          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star e">★</span></div>
-          <span class="r-count en">(123 reviews)</span>
-          <span class="r-count ar">(١٢٣ رأي)</span>
-        </div>
-        <p class="biz-desc en">Highly professional team with spotless environment. Worth every pound — the haircut results speak for themselves.</p>
-        <p class="biz-desc ar">فريق محترف جداً والمكان نظيف. يستاهل كل قرش — النتيجة بتتكلم عن نفسها.</p>
-        <div class="biz-footer">
-          <span class="biz-loc">📍 <span class="en">Heliopolis, Cairo</span><span class="ar">مصر الجديدة، القاهرة</span></span>
-          <span class="biz-honest en">✓ Real reviews only</span>
-          <span class="biz-honest ar">✓ آراء أصلية فقط</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 3 -->
-    <a class="biz-card" href="#" onclick="openModal('biz');return false;">
-      <div class="biz-img">
-        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=700&q=80" alt="Hotel">
-        <div class="biz-rank">#3</div>
-        <div class="biz-badge bb-hot en">🔥 Trending</div>
-        <div class="biz-badge bb-hot ar">🔥 رائج</div>
-      </div>
-      <div class="biz-body">
-        <div class="biz-top">
-          <div class="biz-logo">🏨</div>
-          <div class="biz-info">
-            <div class="biz-name en">Nile Pearl Hotel</div>
-            <div class="biz-name ar">فندق لؤلؤة النيل</div>
-            <div class="biz-cat en">Hotel & Stay</div>
-            <div class="biz-cat ar">فنادق وإقامة</div>
-          </div>
-          <div><span class="r-num">4.4</span></div>
-        </div>
-        <div class="biz-rating">
-          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star e">★</span></div>
-          <span class="r-count en">(389 reviews)</span>
-          <span class="r-count ar">(٣٨٩ رأي)</span>
-        </div>
-        <p class="biz-desc en">Central Nile-view location, clean rooms, great breakfast. WiFi could be better for business travelers.</p>
-        <p class="biz-desc ar">موقع مركزي على النيل، غرف نظيفة، إفطار ممتاز. الواي فاي محتاج تحسين.</p>
-        <div class="biz-footer">
-          <span class="biz-loc">📍 <span class="en">Corniche, Cairo</span><span class="ar">الكورنيش، القاهرة</span></span>
-          <span class="biz-honest en">✓ Real reviews only</span>
-          <span class="biz-honest ar">✓ آراء أصلية فقط</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 4 -->
-    <a class="biz-card" href="#" onclick="openModal('biz');return false;">
-      <div class="biz-img">
-        <img src="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=700&q=80" alt="Cafe">
-        <div class="biz-rank">#4</div>
-        <div class="biz-badge bb-verified en">✓ Verified</div>
-        <div class="biz-badge bb-verified ar">✓ موثّق</div>
-      </div>
-      <div class="biz-body">
-        <div class="biz-top">
-          <div class="biz-logo">☕</div>
-          <div class="biz-info">
-            <div class="biz-name en">Espresso House</div>
-            <div class="biz-name ar">إسبريسو هاوس</div>
-            <div class="biz-cat en">Specialty Coffee</div>
-            <div class="biz-cat ar">كافيه متخصص</div>
-          </div>
-          <div><span class="r-num">4.7</span></div>
-        </div>
-        <div class="biz-rating">
-          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
-          <span class="r-count en">(201 reviews)</span>
-          <span class="r-count ar">(٢٠١ رأي)</span>
-        </div>
-        <p class="biz-desc en">Best specialty coffee in the city. Cozy vibe, excellent pastries, great for working remotely or catching up with friends.</p>
-        <p class="biz-desc ar">أحسن قهوة متخصصة في المدينة. جو هادي، كيكات ممتازة، مناسب للشغل أو اللقاء.</p>
-        <div class="biz-footer">
-          <span class="biz-loc">📍 <span class="en">Maadi, Cairo</span><span class="ar">المعادي، القاهرة</span></span>
-          <span class="biz-honest en">✓ Real reviews only</span>
-          <span class="biz-honest ar">✓ آراء أصلية فقط</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 5 -->
-    <a class="biz-card" href="#" onclick="openModal('biz');return false;">
-      <div class="biz-img">
-        <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=700&q=80" alt="Clinic">
-        <div class="biz-rank">#5</div>
-        <div class="biz-badge bb-verified en">✓ Verified</div>
-        <div class="biz-badge bb-verified ar">✓ موثّق</div>
-      </div>
-      <div class="biz-body">
-        <div class="biz-top">
-          <div class="biz-logo">🏥</div>
-          <div class="biz-info">
-            <div class="biz-name en">Dr. Youssef Dental</div>
-            <div class="biz-name ar">عيادة د. يوسف للأسنان</div>
-            <div class="biz-cat en">Dental Clinic</div>
-            <div class="biz-cat ar">عيادة أسنان</div>
-          </div>
-          <div><span class="r-num">4.9</span></div>
-        </div>
-        <div class="biz-rating">
-          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
-          <span class="r-count en">(178 reviews)</span>
-          <span class="r-count ar">(١٧٨ رأي)</span>
-        </div>
-        <p class="biz-desc en">Painless procedures, super professional team. You won't dread the dentist anymore. Best in New Cairo hands down.</p>
-        <p class="biz-desc ar">إجراءات بدون ألم، فريق محترف جداً. مش هتخاف من الدكتور بعد كده. الأفضل في القاهرة الجديدة.</p>
-        <div class="biz-footer">
-          <span class="biz-loc">📍 <span class="en">New Cairo</span><span class="ar">القاهرة الجديدة</span></span>
-          <span class="biz-honest en">✓ Real reviews only</span>
-          <span class="biz-honest ar">✓ آراء أصلية فقط</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 6 -->
-    <a class="biz-card" href="#" onclick="openModal('biz');return false;">
-      <div class="biz-img">
-        <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=700&q=80" alt="Gym">
-        <div class="biz-rank">#6</div>
-        <div class="biz-badge bb-hot en">🔥 Trending</div>
-        <div class="biz-badge bb-hot ar">🔥 رائج</div>
-      </div>
-      <div class="biz-body">
-        <div class="biz-top">
-          <div class="biz-logo">💪</div>
-          <div class="biz-info">
-            <div class="biz-name en">Iron & Steel Gym</div>
-            <div class="biz-name ar">جيم الحديد والصلب</div>
-            <div class="biz-cat en">Fitness Center</div>
-            <div class="biz-cat ar">مركز لياقة بدنية</div>
-          </div>
-          <div><span class="r-num">4.5</span></div>
-        </div>
-        <div class="biz-rating">
-          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star e">★</span></div>
-          <span class="r-count en">(312 reviews)</span>
-          <span class="r-count ar">(٣١٢ رأي)</span>
-        </div>
-        <p class="biz-desc en">Top-tier equipment, 24/7 access, professional coaches. Gets crowded at peak hours but worth it.</p>
-        <p class="biz-desc ar">معدات ممتازة، متاح ٢٤/٧، مدربين محترفين. بيزحم وقت الذروة بس يستاهل.</p>
-        <div class="biz-footer">
-          <span class="biz-loc">📍 <span class="en">6th of October</span><span class="ar">السادس من أكتوبر</span></span>
-          <span class="biz-honest en">✓ Real reviews only</span>
-          <span class="biz-honest ar">✓ آراء أصلية فقط</span>
-        </div>
-      </div>
-    </a>
-
+  <!-- Loaded dynamically from Supabase -->
+  <div class="biz-grid" id="biz-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">
+      <div style="font-size:32px;margin-bottom:12px">⏳</div>
+      <div class="en">Loading places…</div><div class="ar">جاري التحميل…</div>
+    </div>
   </div>
 </div>
-
-<!-- ══ REVIEWS FEED ══ -->
+ 
+<!-- ══ REVIEWS ══ -->
 <div class="section reveal" id="reviews">
   <div class="sec-row">
-    <div class="sec-head">
+    <div>
       <div class="sec-eyebrow en">Latest Reviews</div>
       <div class="sec-eyebrow ar">أحدث الآراء</div>
       <h2 class="sec-title en">What people are <span>saying</span></h2>
@@ -1026,95 +554,19 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
     <a class="see-all en" href="#">All reviews →</a>
     <a class="see-all ar" href="#">كل الآراء →</a>
   </div>
-
-  <div class="reviews-col">
-
-    <div class="review-card reveal">
-      <div class="rv-top">
-        <div class="rv-av" style="background:linear-gradient(135deg,#1db954,#17a349);color:#fff">م</div>
-        <div class="rv-meta">
-          <div class="rv-name en">Mohamed Al-Sayed</div>
-          <div class="rv-name ar">محمد السيد</div>
-          <div class="rv-info">
-            <span class="en">3 hours ago · Cairo</span><span class="ar">منذ ٣ ساعات · القاهرة</span>
-            <span class="rv-ver en">✓ Verified Visit</span>
-            <span class="rv-ver ar">✓ زيارة موثّقة</span>
-          </div>
-        </div>
-        <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
-      </div>
-      <div class="rv-biz-tag">🍽 <span class="en">Al Bayt Al Kabeer</span><span class="ar">مطعم البيت الكبير</span></div>
-      <p class="rv-text en">Honestly didn't expect the food to be this good. Tried the koshary and the grilled kofta — both were incredible. Huge portions, fair price, staff were super welcoming. Definitely my new go-to spot in Zamalek. 💯</p>
-      <p class="rv-text ar">والله ما توقعت يبقى الأكل بالمستوى ده! جربت الكشري والكفتة المشوية — الاتنين كانوا استثنائيين. كمية كبيرة وسعر مناسب والناس بتاعتهم محترمة جداً. بقى مكاني الأساسي في الزمالك. 💯</p>
-      <div class="rv-actions">
-        <button class="rv-btn" onclick="helpful(this)">👍 <span class="en">Helpful (24)</span><span class="ar">مفيد (٢٤)</span></button>
-        <button class="rv-btn">💬 <span class="en">Reply (3)</span><span class="ar">رد (٣)</span></button>
-        <span class="rv-time en">Visit confirmed via GPS check-in</span>
-        <span class="rv-time ar">تم تأكيد الزيارة بالموقع</span>
-      </div>
+  <div class="reviews-col" id="reviews-col">
+    <div style="text-align:center;padding:40px;color:var(--muted)">
+      <div style="font-size:32px;margin-bottom:12px">⏳</div>
+      <div class="en">Loading reviews…</div><div class="ar">جاري التحميل…</div>
     </div>
-
-    <div class="review-card reveal">
-      <div class="rv-top">
-        <div class="rv-av" style="background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff">ن</div>
-        <div class="rv-meta">
-          <div class="rv-name en">Nour Ibrahim</div>
-          <div class="rv-name ar">نور إبراهيم</div>
-          <div class="rv-info">
-            <span class="en">5 hours ago · Alexandria</span><span class="ar">منذ ٥ ساعات · الإسكندرية</span>
-            <span class="rv-ver en">✓ Verified Visit</span>
-            <span class="rv-ver ar">✓ زيارة موثّقة</span>
-          </div>
-        </div>
-        <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star e">★</span></div>
-      </div>
-      <div class="rv-biz-tag">💇 <span class="en">Ibda3 Salon</span><span class="ar">صالون لمسة إبداع</span></div>
-      <p class="rv-text en">Overall great experience. The haircut came out better than expected and the place is spotless. Only downside was the wait — about 20 minutes. But the result was absolutely worth it 😄</p>
-      <p class="rv-text ar">تجربة ممتازة بشكل عام. الحلاقة طلعت أحلى مما توقعت والمكان نظيف جداً. الوحيدة السلبية هي الانتظار — حوالي ٢٠ دقيقة. بس اللي صبر أدرك 😄</p>
-      <div class="rv-actions">
-        <button class="rv-btn" onclick="helpful(this)">👍 <span class="en">Helpful (18)</span><span class="ar">مفيد (١٨)</span></button>
-        <button class="rv-btn">💬 <span class="en">Reply (1)</span><span class="ar">رد (١)</span></button>
-        <span class="rv-time en">Visit confirmed via receipt</span>
-        <span class="rv-time ar">تم التأكيد عبر الفاتورة</span>
-      </div>
-    </div>
-
-    <div class="review-card reveal">
-      <div class="rv-top">
-        <div class="rv-av" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff">س</div>
-        <div class="rv-meta">
-          <div class="rv-name en">Samir Khaled</div>
-          <div class="rv-name ar">سمير خالد</div>
-          <div class="rv-info">
-            <span class="en">Yesterday · Giza</span><span class="ar">أمس · الجيزة</span>
-            <span class="rv-ver en">✓ Honest Review</span>
-            <span class="rv-ver ar">✓ رأي صريح</span>
-          </div>
-        </div>
-        <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star e">★</span><span class="star e">★</span></div>
-      </div>
-      <div class="rv-biz-tag">🏨 <span class="en">Nile Pearl Hotel</span><span class="ar">فندق لؤلؤة النيل</span></div>
-      <p class="rv-text en">Good location and fair price, but there are real issues. WiFi is shockingly bad — 2Mbps in 2025 is unacceptable for business travel. Rooms are clean, Nile view is stunning, breakfast is excellent. Fix the internet and it'd be a 5-star for me.</p>
-      <p class="rv-text ar">موقع كويس وسعر مناسب، بس فيه مشاكل حقيقية. الواي فاي سيء جداً — ٢ميجا في ٢٠٢٥ مش مقبول لمسافر عمل. الغرف نظيفة، المنظر على النيل جميل، الإفطار ممتاز. لو حلوا الإنترنت كانت ٥ نجوم.</p>
-      <div class="rv-actions">
-        <button class="rv-btn" onclick="helpful(this)">👍 <span class="en">Helpful (31)</span><span class="ar">مفيد (٣١)</span></button>
-        <button class="rv-btn">💬 <span class="en">Reply (5)</span><span class="ar">رد (٥)</span></button>
-        <span class="rv-time en">Visit confirmed via GPS</span>
-        <span class="rv-time ar">تأكيد عبر الموقع الجغرافي</span>
-      </div>
-    </div>
-
   </div>
 </div>
-
+ 
 <!-- ══ HOW IT WORKS ══ -->
 <div class="section how-section reveal" id="how">
   <div class="sec-row">
     <div>
-      <div class="sec-eyebrow" style="color:var(--green)">
-        <span class="en">Our Anti-Fake System</span>
-        <span class="ar">نظامنا لمكافحة التزوير</span>
-      </div>
+      <div class="sec-eyebrow" style="color:var(--green)"><span class="en">Our Anti-Fake System</span><span class="ar">نظامنا لمكافحة التزوير</span></div>
       <h2 class="sec-title" style="color:#fff">
         <span class="en">How Ra2y guarantees <span style="color:var(--green)">honesty</span></span>
         <span class="ar">كيف يضمن را٢ي <span style="color:var(--green)">الأمانة</span></span>
@@ -1122,68 +574,37 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
     </div>
   </div>
   <div class="how-grid">
-    <div class="how-step">
-      <div class="how-num">01</div>
-      <div class="how-icon">📱</div>
-      <div class="how-h en">Phone Verification</div>
-      <div class="how-h ar">التحقق بالهاتف</div>
-      <p class="how-p en">Every user is verified via real phone number. One account per person — no fake accounts, no bots.</p>
-      <p class="how-p ar">كل مستخدم بيتحقق منه برقم هاتف حقيقي. حساب واحد لكل شخص — لا حسابات وهمية.</p>
-    </div>
-    <div class="how-step">
-      <div class="how-num">02</div>
-      <div class="how-icon">📍</div>
-      <div class="how-h en">Visit Confirmation</div>
-      <div class="how-h ar">تأكيد الزيارة</div>
-      <p class="how-p en">Reviewers confirm visits via GPS check-in or receipt upload. No visit = unverified badge only.</p>
-      <p class="how-p ar">المراجع بيأكد زيارته بالموقع أو الفاتورة. من غير زيارة = شارة غير موثّقة فقط.</p>
-    </div>
-    <div class="how-step">
-      <div class="how-num">03</div>
-      <div class="how-icon">🤖</div>
-      <div class="how-h en">AI Review Screening</div>
-      <div class="how-h ar">فلتر الذكاء الاصطناعي</div>
-      <p class="how-p en">Every review passes through Claude AI before publishing — automatically detects paid, duplicate, or fake content.</p>
-      <p class="how-p ar">كل رأي بيمر على Claude AI قبل النشر — بيكشف الآراء المدفوعة والمكررة والمزيّفة تلقائياً.</p>
-    </div>
-    <div class="how-step">
-      <div class="how-num">04</div>
-      <div class="how-icon">👥</div>
-      <div class="how-h en">Community Voting</div>
-      <div class="how-h ar">تصويت المجتمع</div>
-      <p class="how-p en">Real users vote on review credibility. Honest voices rise to the top — fake ones get buried automatically.</p>
-      <p class="how-p ar">المستخدمين الحقيقيين بيصوّتوا على مصداقية الآراء. الصادق بيطلع للأعلى — المزيّف بيتدفن.</p>
-    </div>
+    <div class="how-step"><div class="how-num">01</div><div class="how-icon">📱</div><div class="how-h en">Verified Identity</div><div class="how-h ar">هوية موثّقة</div><p class="how-p en">Every user verified via email or phone OTP. One account per person — no bots.</p><p class="how-p ar">كل مستخدم بيتحقق عبر إيميل أو هاتف. حساب واحد لكل شخص.</p></div>
+    <div class="how-step"><div class="how-num">02</div><div class="how-icon">📍</div><div class="how-h en">Visit Confirmation</div><div class="how-h ar">تأكيد الزيارة</div><p class="how-p en">Confirm your visit via GPS or receipt upload. Reviews from people who actually went.</p><p class="how-p ar">أكّد زيارتك بالموقع أو الفاتورة. آراء من ناس زاروا فعلاً.</p></div>
+    <div class="how-step"><div class="how-num">03</div><div class="how-icon">🤖</div><div class="how-h en">AI Screening</div><div class="how-h ar">فلتر الذكاء الاصطناعي</div><p class="how-p en">Every review passes through AI before publishing — detects paid or fake content automatically.</p><p class="how-p ar">كل رأي بيمر على AI قبل النشر — يكشف المدفوع والمزيّف تلقائياً.</p></div>
+    <div class="how-step"><div class="how-num">04</div><div class="how-icon">👥</div><div class="how-h en">Community Voting</div><div class="how-h ar">تصويت المجتمع</div><p class="how-p en">Real users vote on review credibility. Honest voices rise — fake ones sink.</p><p class="how-p ar">المستخدمين بيصوّتوا على مصداقية الآراء. الصادق يطلع — المزيّف يتدفن.</p></div>
   </div>
 </div>
-
+ 
 <!-- ══ MANIFESTO ══ -->
 <div class="manifesto reveal">
   <div class="manifesto-inner">
     <h2 class="en">We don't sell rankings.<br>We protect <em>your trust.</em></h2>
     <h2 class="ar">مش بنبيع ترتيب.<br>بنحمي <em>ثقتك.</em></h2>
-    <p class="en">At Ra2y, no business can pay to appear higher. Our algorithm runs purely on authentic review scores and real visit confirmations. Your voice is free. Your opinion changes things.</p>
-    <p class="ar">في را٢ي، مفيش مكان يقدر يدفع عشان يطلع فوق. الخوارزمية بتشتغل على الآراء الحقيقية وتأكيدات الزيارة بس. صوتك مجاني. رأيك بيغيّر حاجات.</p>
-    <button class="btn-black" onclick="openModal('write')">
+    <p class="en">At Ra2y, no business can pay to appear higher. Our algorithm runs purely on authentic review scores. Your voice is free. Your opinion changes things.</p>
+    <p class="ar">في را٢ي، مفيش مكان يقدر يدفع عشان يطلع فوق. الخوارزمية بتشتغل على الآراء الحقيقية بس. صوتك مجاني. رأيك بيغيّر حاجات.</p>
+    <button class="btn-black" onclick="openWriteReview()">
       <span class="en">✍ Write your honest review — free</span>
       <span class="ar">✍ شارك رأيك الصادق — مجاناً</span>
     </button>
   </div>
 </div>
-
+ 
 <!-- ══ FOOTER ══ -->
 <footer class="reveal">
   <div class="footer-grid">
     <div class="footer-brand">
-      <div class="footer-brand-logo">
-        <div class="logo-icon" style="background:var(--green);color:#000">ر</div>
-        <div class="logo-text">
-          <span class="logo-en" style="color:#fff">Ra2y</span>
-          <span class="logo-ar">رأي الناس للناس</span>
-        </div>
+      <div>
+        <div class="footer-logo-wordmark">Ra<span class="footer-logo-2">2</span>y</div>
+        <div class="footer-logo-line"></div>
       </div>
-      <p class="en">Egypt's first truly honest review platform. No paid rankings. No fake stars. Real voices only.</p>
-      <p class="ar">أول منصة مراجعات أمينة في مصر. لا ترتيب مدفوع. لا نجوم مزيّفة. أصوات حقيقية فقط.</p>
+      <p class="en">Egypt's first truly honest review platform. No paid rankings. No fake stars.</p>
+      <p class="ar">أول منصة مراجعات أمينة في مصر. لا ترتيب مدفوع. لا نجوم مزيّفة.</p>
     </div>
     <div class="fc">
       <h4 class="en">Explore</h4><h4 class="ar">استكشف</h4>
@@ -1194,7 +615,7 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
     </div>
     <div class="fc">
       <h4 class="en">Platform</h4><h4 class="ar">المنصة</h4>
-      <a href="#" class="en">How it works</a><a href="#" class="ar">كيف يعمل</a>
+      <a href="#how" class="en">How it works</a><a href="#how" class="ar">كيف يعمل</a>
       <a href="#" class="en">Anti-fake system</a><a href="#" class="ar">مكافحة التزوير</a>
       <a href="#" class="en">Review policy</a><a href="#" class="ar">سياسة الآراء</a>
       <a href="#" class="en">Add a place</a><a href="#" class="ar">أضف مكانك</a>
@@ -1212,17 +633,194 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
     <strong>No paid rankings. Ever.</strong>
   </div>
 </footer>
-
+ 
 <!-- ══ FLOAT BAR ══ -->
 <div class="float-bar">
-  <p><strong class="en">Visited somewhere recently?</strong><strong class="ar">زرت مكان مؤخراً؟</strong> <span class="en">Your honest review helps thousands of people.</span><span class="ar">رأيك الصريح بيساعد آلاف الناس.</span></p>
-  <button class="btn-write" onclick="openModal('write')">
-    ✍ <span class="en">Write a Review</span><span class="ar">اكتب رأيك</span>
-  </button>
+  <p><strong class="en">Visited somewhere?</strong><strong class="ar">زرت مكان؟</strong> <span class="en">Your honest review helps thousands.</span><span class="ar">رأيك بيساعد آلاف الناس.</span></p>
+  <button class="btn-write" onclick="openWriteReview()">✍ <span class="en">Write a Review</span><span class="ar">اكتب رأيك</span></button>
 </div>
-
+ 
+<!-- ══════════════════════════════════════════════
+     AUTH MODAL — Email OR Phone OTP, 3 steps
+══════════════════════════════════════════════ -->
+<div class="overlay" id="modal-auth" onclick="if(event.target===this)closeModal('auth')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px;padding:0;border-top:none;overflow:hidden;position:relative">
+    <div class="auth-top-bar"></div>
+    <div class="auth-body">
+      <button class="m-close" onclick="closeModal('auth')" style="position:absolute;top:14px;right:14px;z-index:10">✕</button>
+ 
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div style="position:relative;display:inline-block">
+          <span class="auth-logo-text">Ra<span class="auth-logo-2">2</span>y</span>
+        </div>
+      </div>
+ 
+      <!-- Email / Phone toggle -->
+      <div class="auth-method-toggle" id="methodToggle">
+        <button class="method-btn on" id="methodEmail" onclick="setMethod('email')">
+          ✉️ <span class="en">Email</span><span class="ar">إيميل</span>
+        </button>
+        <button class="method-btn" id="methodPhone" onclick="setMethod('phone')">
+          📱 <span class="en">Phone</span><span class="ar">هاتف</span>
+        </button>
+      </div>
+ 
+      <!-- Step dots -->
+      <div class="auth-steps" id="authStepsDots">
+        <div class="auth-step-dot active" id="sdot-1">1</div>
+        <div class="auth-step-line" id="sline-1"></div>
+        <div class="auth-step-dot" id="sdot-2">2</div>
+        <div class="auth-step-line" id="sline-2"></div>
+        <div class="auth-step-dot" id="sdot-3">3</div>
+      </div>
+ 
+      <!-- ── STEP 1: Enter Email or Phone ── -->
+      <div class="auth-panel active" id="auth-step-1">
+        <div class="auth-title en">Welcome to Ra2y</div>
+        <div class="auth-title ar">أهلاً بك في را٢ي</div>
+ 
+        <!-- EMAIL input -->
+        <div id="emailInputWrap">
+          <p class="auth-sub en">Enter your email — we'll send you a verification code</p>
+          <p class="auth-sub ar">أدخل إيميلك — هنبعتلك رمز تحقق</p>
+          <div class="input-icon-wrap">
+            <span class="input-icon">✉️</span>
+            <input class="fi" id="emailInput" type="email" inputmode="email"
+              placeholder-en="you@example.com"
+              placeholder-ar="you@example.com"
+              placeholder="you@example.com"
+              oninput="onEmailInput(this)"
+              onkeydown="if(event.key==='Enter') doSendOTP()"/>
+          </div>
+        </div>
+ 
+        <!-- PHONE input -->
+        <div id="phoneInputWrap" style="display:none">
+          <p class="auth-sub en">Enter your phone number — we'll send you an SMS code</p>
+          <p class="auth-sub ar">أدخل رقم هاتفك — هنبعتلك رمز SMS</p>
+          <div class="phone-wrap">
+            <div class="phone-flag">🇪🇬 <span class="phone-code">+20</span></div>
+            <input class="phone-input" id="phoneInput" type="tel" inputmode="numeric"
+              placeholder="1XX XXX XXXX" maxlength="11"
+              oninput="onPhoneInput(this)"
+              onkeydown="if(event.key==='Enter') doSendOTP()"/>
+          </div>
+        </div>
+ 
+        <div class="auth-error" id="step1-error"></div>
+ 
+        <button class="auth-btn" id="sendOtpBtn" onclick="doSendOTP()" disabled>
+          <span class="auth-spinner"></span>
+          <span class="btn-text en">Send Verification Code →</span>
+          <span class="btn-text ar">إرسال رمز التحقق ←</span>
+        </button>
+        <p class="auth-note en">One account per contact — protects against fake reviews</p>
+        <p class="auth-note ar">حساب واحد لكل جهة اتصال — حماية من الآراء المزيّفة</p>
+      </div>
+ 
+      <!-- ── STEP 2: Enter OTP ── -->
+      <div class="auth-panel" id="auth-step-2">
+        <div class="auth-title en">Check your inbox</div>
+        <div class="auth-title ar">تحقق من صندوق الوارد</div>
+        <p class="auth-sub en">We sent a 6-digit code to <strong id="sentTo"></strong></p>
+        <p class="auth-sub ar">أرسلنا رمزاً مكوناً من ٦ أرقام إلى <strong id="sentToAr"></strong></p>
+ 
+        <div class="otp-wrap" id="otpWrap">
+          <input class="otp-box" maxlength="1" inputmode="numeric" id="otp0" oninput="otpInput(0)" onkeydown="otpKey(event,0)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" id="otp1" oninput="otpInput(1)" onkeydown="otpKey(event,1)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" id="otp2" oninput="otpInput(2)" onkeydown="otpKey(event,2)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" id="otp3" oninput="otpInput(3)" onkeydown="otpKey(event,3)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" id="otp4" oninput="otpInput(4)" onkeydown="otpKey(event,4)">
+          <input class="otp-box" maxlength="1" inputmode="numeric" id="otp5" oninput="otpInput(5)" onkeydown="otpKey(event,5)">
+        </div>
+ 
+        <div class="otp-timer">
+          <span class="en">Code expires in</span><span class="ar">ينتهي خلال</span>
+          <span id="timerDisplay">2:00</span>
+          <button class="resend-btn" id="resendBtn" onclick="doResend()">
+            <span class="en">Resend</span><span class="ar">إعادة إرسال</span>
+          </button>
+        </div>
+ 
+        <div class="auth-error" id="step2-error"></div>
+ 
+        <button class="auth-btn" id="verifyBtn" onclick="doVerify()" disabled>
+          <span class="auth-spinner"></span>
+          <span class="btn-text en">Verify Code →</span>
+          <span class="btn-text ar">تأكيد الرمز ←</span>
+        </button>
+        <button class="back-link" onclick="goToStep(1)">
+          <span class="en">← Change email / phone</span><span class="ar">→ تغيير الإيميل / الهاتف</span>
+        </button>
+      </div>
+ 
+      <!-- ── STEP 3: Profile Setup ── -->
+      <div class="auth-panel" id="auth-step-3">
+        <div class="name-avatar" id="nameAvatar" style="background:var(--green)">😊</div>
+        <div class="auth-title en">Almost done!</div>
+        <div class="auth-title ar">تقريباً انتهينا!</div>
+        <p class="auth-sub en">Add your name so people know who's behind the honest review</p>
+        <p class="auth-sub ar">أضف اسمك حتى يعرف الناس من يقف وراء الرأي الصادق</p>
+ 
+        <div class="fg" style="text-align:left">
+          <label class="fl en">Your Name *</label>
+          <label class="fl ar">اسمك *</label>
+          <input class="fi" id="nameInput" type="text"
+            placeholder-en="e.g. Mohamed Hassan"
+            placeholder-ar="مثال: محمد حسن"
+            placeholder="e.g. Mohamed Hassan"
+            maxlength="40" oninput="onNameType(this)"/>
+        </div>
+        <div class="fg" style="text-align:left">
+          <label class="fl en">City</label>
+          <label class="fl ar">المدينة</label>
+          <select class="fsel" id="citySelect">
+            <option value="">Select city / اختر المدينة</option>
+            <option value="Cairo">Cairo / القاهرة</option>
+            <option value="Alexandria">Alexandria / الإسكندرية</option>
+            <option value="Giza">Giza / الجيزة</option>
+            <option value="New Cairo">New Cairo / القاهرة الجديدة</option>
+            <option value="6th October">6th October / السادس من أكتوبر</option>
+            <option value="Hurghada">Hurghada / الغردقة</option>
+            <option value="Sharm">Sharm El Sheikh / شرم الشيخ</option>
+            <option value="Luxor">Luxor / الأقصر</option>
+            <option value="Other">Other / أخرى</option>
+          </select>
+        </div>
+ 
+        <div class="auth-error" id="step3-error"></div>
+ 
+        <button class="auth-btn" id="createBtn" onclick="doCreate()">
+          <span class="auth-spinner"></span>
+          <span class="btn-text en">Create My Account →</span>
+          <span class="btn-text ar">إنشاء حسابي ←</span>
+        </button>
+        <p class="auth-note en">By signing up you agree to our <a href="#" style="color:var(--green)">Terms</a> & <a href="#" style="color:var(--green)">Privacy Policy</a></p>
+        <p class="auth-note ar">بالتسجيل توافق على <a href="#" style="color:var(--green)">الشروط</a> و<a href="#" style="color:var(--green)">سياسة الخصوصية</a></p>
+      </div>
+ 
+      <!-- ── SUCCESS ── -->
+      <div class="auth-panel" id="auth-step-success">
+        <div style="text-align:center;padding:8px 0">
+          <div class="success-circle">✓</div>
+          <div class="auth-title en">You're in! 🎉</div>
+          <div class="auth-title ar">أنت الآن داخل! 🎉</div>
+          <p class="auth-sub en">Welcome, <strong id="welcomeName"></strong>! You can now write honest reviews.</p>
+          <p class="auth-sub ar">أهلاً، <strong id="welcomeNameAr"></strong>! يمكنك الآن كتابة آراء صادقة.</p>
+          <button class="auth-btn" onclick="closeModal('auth')" style="margin-top:8px">
+            <span class="btn-text en">Start Reviewing →</span>
+            <span class="btn-text ar">ابدأ الآن ←</span>
+          </button>
+        </div>
+      </div>
+ 
+    </div><!-- /auth-body -->
+  </div>
+</div>
+ 
 <!-- ══ WRITE REVIEW MODAL ══ -->
-<div class="overlay" id="modal-write" onclick="closeModal('write')">
+<div class="overlay" id="modal-write" onclick="if(event.target===this)closeModal('write')">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="m-head">
       <div class="m-title en">✍ Write Your Honest Review</div>
@@ -1231,19 +829,21 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
     </div>
     <div class="fg">
       <label class="fl en">Place Name *</label><label class="fl ar">اسم المكان *</label>
-      <input class="fi" type="text" placeholder-en="e.g. Al Bayt Al Kabeer" placeholder-ar="مثال: مطعم البيت الكبير" placeholder="e.g. Al Bayt Al Kabeer">
+      <input class="fi" id="reviewBizName" type="text"
+        placeholder-en="e.g. Al Bayt Al Kabeer" placeholder-ar="مثال: مطعم البيت الكبير"
+        placeholder="e.g. the business name"/>
     </div>
     <div class="fg">
       <label class="fl en">Category *</label><label class="fl ar">الفئة *</label>
-      <select class="fsel">
-        <option class="en">Select category...</option><option class="ar">اختر الفئة...</option>
-        <option>🍽 Restaurant / مطعم</option>
-        <option>☕ Café / كافيه</option>
-        <option>💇 Salon / صالون</option>
-        <option>🏥 Clinic / عيادة</option>
-        <option>🏨 Hotel / فندق</option>
-        <option>💪 Gym / جيم</option>
-        <option>🛍 Shopping / تسوق</option>
+      <select class="fsel" id="reviewCategory">
+        <option value="">Select / اختر</option>
+        <option value="Restaurant">🍽 Restaurant / مطعم</option>
+        <option value="Café">☕ Café / كافيه</option>
+        <option value="Salon">💇 Salon / صالون</option>
+        <option value="Clinic">🏥 Clinic / عيادة</option>
+        <option value="Hotel">🏨 Hotel / فندق</option>
+        <option value="Gym">💪 Gym / جيم</option>
+        <option value="Shopping">🛍 Shopping / تسوق</option>
       </select>
     </div>
     <div class="fg">
@@ -1255,874 +855,34 @@ footer{background:var(--black);color:rgba(255,255,255,.5);padding:60px clamp(16p
     </div>
     <div class="fg">
       <label class="fl en">Your Honest Review *</label><label class="fl ar">رأيك الصريح *</label>
-      <textarea class="fta" placeholder-en="Share your real experience — good or bad. Be honest, be specific. Your review helps real people make real decisions." placeholder-ar="شارك تجربتك الحقيقية — كويسة أو وحشة. كن صريحاً ومحدداً. رأيك بيساعد ناس حقيقية." placeholder="Share your real experience..."></textarea>
+      <textarea class="fta" id="reviewText"
+        placeholder-en="Share your real experience — good or bad. Be specific. Your review helps real people."
+        placeholder-ar="شارك تجربتك الحقيقية — كويسة أو وحشة. كن محدداً. رأيك بيساعد ناس حقيقية."
+        placeholder="Share your real experience…"></textarea>
     </div>
     <div class="fg">
-      <label class="fl en">Did you visit?</label><label class="fl ar">هل زرت المكان؟</label>
-      <select class="fsel">
-        <option class="en">Yes, visited in person</option><option class="ar">نعم، زرته شخصياً</option>
-        <option class="en">Ordered delivery</option><option class="ar">طلبت توصيل</option>
-        <option class="en">Visited with someone</option><option class="ar">زرته مع حد</option>
+      <label class="fl en">Did you visit in person?</label><label class="fl ar">هل زرت المكان؟</label>
+      <select class="fsel" id="reviewVisit">
+        <option value="self" class="en">Yes, visited in person</option><option value="self" class="ar">نعم، زرته شخصياً</option>
+        <option value="delivery" class="en">Ordered delivery</option><option value="delivery" class="ar">طلبت توصيل</option>
+        <option value="accompanied" class="en">Visited with someone</option><option value="accompanied" class="ar">زرته مع حد</option>
       </select>
     </div>
     <div class="m-note">
       <span>💡</span>
-      <span class="en">Your review will pass through our AI system before publishing. Paid, duplicate, or fake reviews are automatically removed — we protect your community.</span>
-      <span class="ar">رأيك هيمر على نظام AI قبل النشر. الآراء المدفوعة أو المكررة أو المزيّفة بتتشال تلقائياً — بنحمي مجتمعك.</span>
+      <span class="en">Your review passes through AI screening before publishing. Paid or fake reviews are removed automatically.</span>
+      <span class="ar">رأيك بيمر على AI قبل النشر. الآراء المدفوعة أو المزيّفة بتتشال تلقائياً.</span>
     </div>
-    <button class="btn-submit" onclick="submitReview()">
+    <div id="review-submit-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:12px;color:#dc2626;margin-bottom:12px"></div>
+    <button class="btn-submit" id="reviewSubmitBtn" onclick="doSubmitReview()">
       <span class="en">Publish My Honest Review →</span>
       <span class="ar">نشر رأيي الصادق ←</span>
     </button>
   </div>
 </div>
-
-<!-- ══ BIZ MODAL ══ -->
-<div class="overlay" id="modal-biz" onclick="closeModal('biz')">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:640px">
-    <div class="m-head">
-      <div>
-        <div class="m-title en">🍽 Al Bayt Al Kabeer</div>
-        <div class="m-title ar">🍽 مطعم البيت الكبير</div>
-        <div style="font-size:12px;color:var(--green);font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.5px" class="en">Arabic Cuisine · Zamalek, Cairo</div>
-        <div style="font-size:12px;color:var(--green);font-weight:700;margin-top:4px;" class="ar">مطاعم عربية · الزمالك، القاهرة</div>
-      </div>
-      <button class="m-close" onclick="closeModal('biz')">✕</button>
-    </div>
-    <div style="display:flex;gap:24px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
-      <div style="text-align:center">
-        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:56px;color:var(--ink);line-height:1">4.8</div>
-        <div class="stars" style="justify-content:center;margin:4px 0"><span class="star" style="font-size:18px">★</span><span class="star" style="font-size:18px">★</span><span class="star" style="font-size:18px">★</span><span class="star" style="font-size:18px">★</span><span class="star" style="font-size:18px">★</span></div>
-        <div style="font-size:12px;color:var(--muted)" class="en">247 reviews</div>
-        <div style="font-size:12px;color:var(--muted)" class="ar">٢٤٧ رأي</div>
-      </div>
-      <div style="flex:1;min-width:180px">
-        <div class="rbar"><span class="rbar-lbl">5★</span><div class="rbar-track"><div class="rbar-fill" style="width:78%"></div></div><span class="rbar-pct">78%</span></div>
-        <div class="rbar"><span class="rbar-lbl">4★</span><div class="rbar-track"><div class="rbar-fill" style="width:15%;background:#a8e6bc"></div></div><span class="rbar-pct">15%</span></div>
-        <div class="rbar"><span class="rbar-lbl">3★</span><div class="rbar-track"><div class="rbar-fill" style="width:5%;background:#fbbf24"></div></div><span class="rbar-pct">5%</span></div>
-        <div class="rbar"><span class="rbar-lbl">2★</span><div class="rbar-track"><div class="rbar-fill" style="width:1%;background:#f87171"></div></div><span class="rbar-pct">1%</span></div>
-        <div class="rbar"><span class="rbar-lbl">1★</span><div class="rbar-track"><div class="rbar-fill" style="width:1%;background:#f87171"></div></div><span class="rbar-pct">1%</span></div>
-      </div>
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
-      <span class="biz-honest en">✓ 247 honest reviews</span>
-      <span class="biz-honest ar">✓ ٢٤٧ رأي أصلي</span>
-      <span style="background:var(--grey);color:var(--muted);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px;border:1px solid var(--border)">📍 Zamalek</span>
-      <span style="background:var(--grey);color:var(--muted);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px;border:1px solid var(--border)">⏰ 12PM – 11PM</span>
-      <span style="background:var(--grey);color:var(--muted);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px;border:1px solid var(--border)">📞 +20 2 1234 5678</span>
-    </div>
-    <button class="btn-submit" onclick="closeModal('biz');openModal('write')">
-      <span class="en">✍ Write a Review for This Place</span>
-      <span class="ar">✍ اكتب رأيك عن هذا المكان</span>
-    </button>
-  </div>
-</div>
-
-<!-- ══ AUTH MODAL — 3-STEP OTP FLOW ══ -->
-<style>
-/* ── Auth modal overrides ── */
-#modal-auth .modal{
-  max-width:420px;
-  padding:0;
-  overflow:hidden;
-  border-top:none; /* we do our own top bar */
-}
-
-/* Green top accent */
-.auth-top-bar{
-  height:5px;
-  background:linear-gradient(90deg,var(--green),#0fa844);
-  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-.auth-body{ padding:32px 32px 28px; text-align:center; }
-
-/* Logo icon */
-.auth-icon{
-  width:60px;height:60px;background:var(--black);border-radius:16px;
-  display:grid;place-items:center;
-  font-family:'Cairo',sans-serif;font-weight:900;font-size:26px;color:var(--green);
-  margin:0 auto 20px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.15);
-}
-
-/* Step indicator */
-.auth-steps{
-  display:flex;align-items:center;justify-content:center;gap:0;
-  margin-bottom:28px;
-}
-.auth-step-dot{
-  width:28px;height:28px;border-radius:50%;
-  background:var(--grey);border:2px solid var(--border);
-  display:grid;place-items:center;
-  font-size:11px;font-weight:700;color:var(--dimmed);
-  transition:all .3s;flex-shrink:0;
-}
-.auth-step-dot.done{ background:var(--green);border-color:var(--green);color:#fff; }
-.auth-step-dot.active{ background:var(--black);border-color:var(--black);color:#fff; }
-.auth-step-line{
-  width:40px;height:2px;background:var(--border);
-  transition:background .3s;flex-shrink:0;
-}
-.auth-step-line.done{ background:var(--green); }
-
-/* Step panels */
-.auth-panel{ display:none; }
-.auth-panel.active{ display:block; }
-
-.auth-title{
-  font-family:'Syne',sans-serif;font-weight:800;font-size:22px;
-  color:var(--ink);margin-bottom:6px;
-}
-.auth-sub{
-  font-size:13px;color:var(--muted);line-height:1.6;
-  margin-bottom:24px;
-}
-.auth-sub strong{ color:var(--ink); }
-
-/* Phone input with flag */
-.phone-wrap{
-  display:flex;align-items:center;
-  border:2px solid var(--border);border-radius:12px;
-  overflow:hidden;margin-bottom:14px;
-  transition:border-color .2s,box-shadow .2s;
-  background:var(--paper);
-}
-.phone-wrap:focus-within{
-  border-color:var(--green);
-  box-shadow:0 0 0 3px rgba(29,185,84,.12);
-}
-.phone-flag{
-  padding:0 14px;font-size:20px;
-  border-right:1.5px solid var(--border);
-  background:var(--grey);height:52px;
-  display:flex;align-items:center;gap:6px;flex-shrink:0;
-}
-.phone-code{
-  font-size:13px;font-weight:700;color:var(--muted);
-}
-.phone-input{
-  flex:1;border:none;outline:none;
-  font-family:'DM Sans',sans-serif;font-size:16px;
-  padding:14px 16px;background:transparent;color:var(--ink);
-  letter-spacing:.5px;
-}
-.phone-input::placeholder{color:var(--dimmed);}
-
-/* OTP input boxes */
-.otp-wrap{
-  display:flex;gap:10px;justify-content:center;
-  margin-bottom:14px;
-}
-.otp-box{
-  width:52px;height:60px;
-  border:2px solid var(--border);border-radius:12px;
-  font-family:'Syne',sans-serif;font-weight:800;font-size:24px;
-  text-align:center;outline:none;background:var(--paper);color:var(--ink);
-  transition:all .2s;
-  caret-color:var(--green);
-}
-.otp-box:focus{
-  border-color:var(--green);
-  box-shadow:0 0 0 3px rgba(29,185,84,.12);
-  background:#fff;
-}
-.otp-box.filled{
-  border-color:var(--green);
-  background:var(--green-light);
-}
-.otp-box.error{
-  border-color:#ef4444;
-  background:#fef2f2;
-  animation:shake .3s ease;
-}
-@keyframes shake{
-  0%,100%{transform:translateX(0)}
-  25%{transform:translateX(-6px)}
-  75%{transform:translateX(6px)}
-}
-
-/* Timer */
-.otp-timer{
-  font-size:12px;color:var(--muted);margin-bottom:20px;
-  display:flex;align-items:center;justify-content:center;gap:6px;
-}
-.otp-timer span{ color:var(--green);font-weight:700; }
-.resend-btn{
-  background:none;border:none;cursor:pointer;
-  color:var(--green);font-weight:700;font-size:12px;
-  font-family:'DM Sans',sans-serif;text-decoration:underline;
-  padding:0;display:none;
-}
-.resend-btn.show{ display:inline; }
-
-/* Name step */
-.name-avatar{
-  width:72px;height:72px;border-radius:50%;
-  display:grid;place-items:center;
-  font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:#fff;
-  margin:0 auto 20px;
-  transition:background .3s;
-}
-
-/* Submit btn states */
-.auth-btn{
-  width:100%;padding:15px;background:var(--black);color:#fff;
-  border:none;border-radius:12px;
-  font-family:'Syne',sans-serif;font-weight:700;font-size:15px;
-  cursor:pointer;transition:all .25s;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  position:relative;overflow:hidden;
-}
-.auth-btn:hover:not(:disabled){ background:var(--green);color:#000; }
-.auth-btn:disabled{ opacity:.5;cursor:not-allowed; }
-.auth-btn.loading{ pointer-events:none; }
-.auth-btn .btn-text{ transition:opacity .2s; }
-.auth-btn.loading .btn-text{ opacity:0; }
-.auth-spinner{
-  position:absolute;
-  width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);
-  border-top-color:#fff;border-radius:50%;
-  animation:spin .7s linear infinite;
-  display:none;
-}
-.auth-btn.loading .auth-spinner{ display:block; }
-@keyframes spin{ to{transform:rotate(360deg)} }
-
-/* Success state */
-.auth-success{
-  text-align:center;padding:12px 0 4px;
-}
-.success-circle{
-  width:72px;height:72px;background:var(--green);border-radius:50%;
-  display:grid;place-items:center;margin:0 auto 16px;
-  font-size:32px;
-  animation:pop-in .4s cubic-bezier(.34,1.56,.64,1);
-}
-@keyframes pop-in{
-  from{transform:scale(0);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
-
-/* Error message */
-.auth-error{
-  background:#fef2f2;border:1px solid #fecaca;border-radius:8px;
-  padding:10px 14px;font-size:12px;color:#dc2626;
-  margin-bottom:14px;display:none;text-align:left;
-}
-.auth-error.show{ display:block; }
-
-/* Bottom note */
-.auth-note{
-  font-size:11px;color:var(--dimmed);margin-top:14px;line-height:1.5;
-}
-</style>
-
-<div class="overlay" id="modal-auth" onclick="authOverlayClick(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="auth-top-bar"></div>
-    <div class="auth-body">
-
-      <!-- Close btn -->
-      <button class="m-close" onclick="closeModal('auth')" style="position:absolute;top:14px;right:14px;z-index:10">✕</button>
-
-      <!-- Logo -->
-      <div class="auth-icon">ر</div>
-
-      <!-- Step indicator: ①——②——③ -->
-      <div class="auth-steps">
-        <div class="auth-step-dot active" id="sdot-1">1</div>
-        <div class="auth-step-line" id="sline-1"></div>
-        <div class="auth-step-dot" id="sdot-2">2</div>
-        <div class="auth-step-line" id="sline-2"></div>
-        <div class="auth-step-dot" id="sdot-3">3</div>
-      </div>
-
-      <!-- ══ STEP 1: Phone Number ══ -->
-      <div class="auth-panel active" id="auth-step-1">
-        <div class="auth-title en">Welcome to Ra2y</div>
-        <div class="auth-title ar">أهلاً بك في را٢ي</div>
-        <p class="auth-sub en">Enter your phone number to receive a verification code via SMS</p>
-        <p class="auth-sub ar">أدخل رقم هاتفك لاستقبال رمز التحقق عبر SMS</p>
-
-        <div class="phone-wrap">
-          <div class="phone-flag">
-            🇪🇬 <span class="phone-code">+20</span>
-          </div>
-          <input
-            class="phone-input"
-            id="phoneInput"
-            type="tel"
-            inputmode="numeric"
-            placeholder-en="1XX XXX XXXX"
-            placeholder-ar="1XX XXX XXXX"
-            placeholder="1XX XXX XXXX"
-            maxlength="11"
-            oninput="onPhoneInput(this)"
-            onkeydown="if(event.key==='Enter') sendOTP()"
-          />
-        </div>
-
-        <div class="auth-error" id="phone-error"></div>
-
-        <button class="auth-btn" id="sendOtpBtn" onclick="sendOTP()">
-          <span class="auth-spinner"></span>
-          <span class="btn-text en">Send Verification Code →</span>
-          <span class="btn-text ar">إرسال رمز التحقق ←</span>
-        </button>
-
-        <p class="auth-note en">One account per phone number — protects against fake reviews</p>
-        <p class="auth-note ar">حساب واحد لكل رقم هاتف — حماية من الآراء المزيّفة</p>
-      </div>
-
-      <!-- ══ STEP 2: OTP Code ══ -->
-      <div class="auth-panel" id="auth-step-2">
-        <div class="auth-title en">Check your phone</div>
-        <div class="auth-title ar">تحقق من هاتفك</div>
-        <p class="auth-sub en">We sent a 6-digit code to <strong id="phonePrev"></strong><br>Enter it below</p>
-        <p class="auth-sub ar">أرسلنا رمزاً مكوناً من ٦ أرقام إلى <strong id="phonePrevAr"></strong><br>أدخله أدناه</p>
-
-        <div class="otp-wrap" id="otpWrap">
-          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp0" oninput="otpInput(0)" onkeydown="otpKey(event,0)">
-          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp1" oninput="otpInput(1)" onkeydown="otpKey(event,1)">
-          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp2" oninput="otpInput(2)" onkeydown="otpKey(event,2)">
-          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp3" oninput="otpInput(3)" onkeydown="otpKey(event,3)">
-          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp4" oninput="otpInput(4)" onkeydown="otpKey(event,4)">
-          <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp5" oninput="otpInput(5)" onkeydown="otpKey(event,5)">
-        </div>
-
-        <div class="otp-timer">
-          <span class="en">Code expires in</span>
-          <span class="ar">ينتهي الرمز خلال</span>
-          <span id="timerDisplay">2:00</span>
-          <button class="resend-btn" id="resendBtn" onclick="resendOTP()">
-            <span class="en">Resend code</span>
-            <span class="ar">إعادة الإرسال</span>
-          </button>
-        </div>
-
-        <div class="auth-error" id="otp-error"></div>
-
-        <button class="auth-btn" id="verifyOtpBtn" onclick="verifyOTP()" disabled>
-          <span class="auth-spinner"></span>
-          <span class="btn-text en">Verify Code →</span>
-          <span class="btn-text ar">تحقق من الرمز ←</span>
-        </button>
-
-        <button onclick="goToStep(1)" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;margin-top:12px;font-family:'DM Sans',sans-serif;">
-          <span class="en">← Change phone number</span>
-          <span class="ar">→ تغيير رقم الهاتف</span>
-        </button>
-      </div>
-
-      <!-- ══ STEP 3: Name Setup ══ -->
-      <div class="auth-panel" id="auth-step-3">
-        <div class="name-avatar" id="nameAvatar" style="background:var(--green)">😊</div>
-        <div class="auth-title en">Almost done!</div>
-        <div class="auth-title ar">تقريباً انتهينا!</div>
-        <p class="auth-sub en">Add your name so people know who's behind the honest review</p>
-        <p class="auth-sub ar">أضف اسمك حتى يعرف الناس من يقف وراء الرأي الصادق</p>
-
-        <div class="fg" style="text-align:left">
-          <label class="fl en">Your Name</label>
-          <label class="fl ar">اسمك</label>
-          <input class="fi" id="nameInput" type="text"
-            placeholder-en="e.g. Mohamed Hassan"
-            placeholder-ar="مثال: محمد حسن"
-            placeholder="e.g. Mohamed Hassan"
-            maxlength="40"
-            oninput="onNameInput(this)"
-            style="font-size:16px"
-          />
-        </div>
-
-        <div class="fg" style="text-align:left;margin-top:4px">
-          <label class="fl en">Your City</label>
-          <label class="fl ar">مدينتك</label>
-          <select class="fsel" id="citySelect" style="font-size:15px">
-            <option value="" class="en">Select your city…</option>
-            <option value="" class="ar">اختر مدينتك…</option>
-            <option value="Cairo">Cairo / القاهرة</option>
-            <option value="Alexandria">Alexandria / الإسكندرية</option>
-            <option value="Giza">Giza / الجيزة</option>
-            <option value="New Cairo">New Cairo / القاهرة الجديدة</option>
-            <option value="6th October">6th of October / السادس من أكتوبر</option>
-            <option value="Hurghada">Hurghada / الغردقة</option>
-            <option value="Sharm">Sharm El Sheikh / شرم الشيخ</option>
-            <option value="Luxor">Luxor / الأقصر</option>
-            <option value="Aswan">Aswan / أسوان</option>
-            <option value="Other">Other / أخرى</option>
-          </select>
-        </div>
-
-        <div class="auth-error" id="name-error"></div>
-
-        <button class="auth-btn" id="createAccountBtn" onclick="createAccount()">
-          <span class="auth-spinner"></span>
-          <span class="btn-text en">Create My Account →</span>
-          <span class="btn-text ar">إنشاء حسابي ←</span>
-        </button>
-
-        <p class="auth-note en">By creating an account you agree to our <a href="#" style="color:var(--green)">Terms</a> & <a href="#" style="color:var(--green)">Privacy Policy</a></p>
-        <p class="auth-note ar">بإنشاء حساب توافق على <a href="#" style="color:var(--green)">الشروط</a> و<a href="#" style="color:var(--green)">سياسة الخصوصية</a></p>
-      </div>
-
-      <!-- ══ SUCCESS ══ -->
-      <div class="auth-panel" id="auth-step-success">
-        <div class="auth-success">
-          <div class="success-circle">✓</div>
-          <div class="auth-title en">You're in! 🎉</div>
-          <div class="auth-title ar">!أنت الآن داخل 🎉</div>
-          <p class="auth-sub en">Welcome to Ra2y, <strong id="welcomeName"></strong>!<br>You can now write honest reviews and help your community.</p>
-          <p class="auth-sub ar">أهلاً في را٢ي، <strong id="welcomeNameAr"></strong>!<br>يمكنك الآن كتابة آراء صادقة ومساعدة مجتمعك.</p>
-          <button class="auth-btn" onclick="closeModal('auth')" style="margin-top:8px">
-            <span class="btn-text en">Start Reviewing →</span>
-            <span class="btn-text ar">ابدأ الآن ←</span>
-          </button>
-        </div>
-      </div>
-
-    </div><!-- /auth-body -->
-  </div><!-- /modal -->
-</div>
-
+ 
 <!-- ══ TOAST ══ -->
 <div class="toast" id="toast">
-  ✓ <span class="en">Review submitted! Under review before publishing.</span>
-  <span class="ar">تم الإرسال! سيُراجع رأيك قبل النشر.</span>
+  ✓ <span class="en">Submitted! Under review before publishing.</span>
+  <span class="ar">تم الإرسال! سيُراجع قبل النشر.</span>
 </div>
-
-<script>
-// ════════════════════════════════════════════════════════
-//  SUPABASE  — swap in your real keys when ready
-//  import from ra2y-supabase.js or paste keys here
-// ════════════════════════════════════════════════════════
-// const SUPABASE_URL  = 'https://YOUR_PROJECT.supabase.co';
-// const SUPABASE_ANON = 'YOUR_ANON_KEY';
-// const { createClient } = supabase;
-// const db = createClient(SUPABASE_URL, SUPABASE_ANON);
-
-// ── Language ──────────────────────────────────────────
-function setLang(l){
-  document.documentElement.setAttribute('data-lang',l);
-  document.documentElement.setAttribute('dir',l==='ar'?'rtl':'ltr');
-  document.documentElement.setAttribute('lang',l);
-  document.querySelectorAll('.lbtn').forEach(b=>{
-    b.classList.toggle('on',
-      (l==='ar'&&b.textContent.includes('ع'))||(l==='en'&&b.textContent==='EN')
-    );
-  });
-  document.querySelectorAll('[placeholder-'+l+']').forEach(el=>{
-    el.placeholder=el.getAttribute('placeholder-'+l)||'';
-  });
-}
-setLang('en');
-
-// ── Tabs ──────────────────────────────────────────────
-function activateTab(t){
-  t.closest('.tabs').querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-  t.classList.add('on');
-}
-
-// ── Stars ─────────────────────────────────────────────
-function setS(n){
-  document.querySelectorAll('#starPick span').forEach((s,i)=>s.classList.toggle('lit',i<n));
-}
-
-// ── Modals ────────────────────────────────────────────
-function openModal(id){
-  document.getElementById('modal-'+id).classList.add('open');
-  document.body.style.overflow='hidden';
-  if(id==='auth') resetAuth();
-}
-function closeModal(id){
-  document.getElementById('modal-'+id).classList.remove('open');
-  document.body.style.overflow='';
-}
-function authOverlayClick(e){
-  if(e.target===document.getElementById('modal-auth')) closeModal('auth');
-}
-
-// ── Toast ─────────────────────────────────────────────
-function showToast(msg){
-  const t=document.getElementById('toast');
-  if(msg){
-    t.querySelector('.en').textContent=msg;
-    t.querySelector('.ar').textContent=msg;
-  }
-  t.classList.add('on');
-  setTimeout(()=>t.classList.remove('on'),4000);
-}
-function submitReview(){closeModal('write');showToast();}
-
-// ── Helpful ───────────────────────────────────────────
-function helpful(btn){
-  if(btn._done)return;btn._done=true;
-  [btn.querySelector('.en'),btn.querySelector('.ar')].forEach(el=>{
-    if(!el)return;
-    const m=el.textContent.match(/\d+/);
-    if(m)el.textContent=el.textContent.replace(m[0],parseInt(m[0])+1);
-  });
-  btn.style.background='var(--green-light)';
-  btn.style.color='var(--green-dark)';
-  btn.style.borderColor='rgba(29,185,84,.3)';
-}
-
-function fill(q){document.getElementById('heroWhat').value=q}
-function scrollToBiz(){document.getElementById('businesses').scrollIntoView({behavior:'smooth'})}
-
-// ── Scroll reveal ─────────────────────────────────────
-const obs=new IntersectionObserver(entries=>{
-  entries.forEach((e,i)=>{
-    if(e.isIntersecting) setTimeout(()=>e.target.classList.add('visible'),i*60);
-  });
-},{threshold:.08});
-document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
-
-
-// ════════════════════════════════════════════════════════
-//  AUTH — 3-STEP OTP FLOW
-// ════════════════════════════════════════════════════════
-
-let authState = {
-  phone: '',        // full phone with country code
-  otpCode: '',      // what user typed
-  timerInterval: null,
-  timerSeconds: 120,
-  currentUser: null,
-};
-
-// Colours for avatar
-const avatarColors = ['#1db954','#0d9488','#7c3aed','#dc2626','#d97706','#0369a1'];
-
-// ── Step navigation ───────────────────────────────────
-function goToStep(n){
-  // Hide all panels
-  document.querySelectorAll('.auth-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('auth-step-'+n).classList.add('active');
-
-  // Update step dots
-  for(let i=1;i<=3;i++){
-    const dot  = document.getElementById('sdot-'+i);
-    const line = document.getElementById('sline-'+i);
-    if(i < n){
-      dot.className='auth-step-dot done'; dot.textContent='✓';
-    } else if(i === n){
-      dot.className='auth-step-dot active'; dot.textContent=i;
-    } else {
-      dot.className='auth-step-dot'; dot.textContent=i;
-    }
-    if(line){
-      line.className='auth-step-line'+(i<n?' done':'');
-    }
-  }
-
-  // Focus first input
-  if(n===1) setTimeout(()=>document.getElementById('phoneInput').focus(),200);
-  if(n===2) setTimeout(()=>document.getElementById('otp0').focus(),200);
-  if(n===3) setTimeout(()=>document.getElementById('nameInput').focus(),200);
-}
-
-function resetAuth(){
-  goToStep(1);
-  document.getElementById('phoneInput').value='';
-  clearOtpBoxes();
-  clearErrors();
-  stopTimer();
-}
-
-// ── Phone input validation ─────────────────────────────
-function onPhoneInput(el){
-  // Egyptian mobile: 01x xxxxxxxx (10 digits) or 1x xxxxxxxx
-  el.value = el.value.replace(/\D/g,'');
-  const btn = document.getElementById('sendOtpBtn');
-  const valid = el.value.length >= 10;
-  btn.disabled = !valid;
-}
-
-// ── Error display ──────────────────────────────────────
-function showError(id, msg){
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.classList.add('show');
-}
-function clearErrors(){
-  document.querySelectorAll('.auth-error').forEach(e=>{
-    e.classList.remove('show'); e.textContent='';
-  });
-}
-function clearOtpBoxes(){
-  for(let i=0;i<6;i++){
-    const b=document.getElementById('otp'+i);
-    if(b){b.value='';b.className='otp-box';}
-  }
-  document.getElementById('verifyOtpBtn').disabled=true;
-}
-
-// ── Button loading state ───────────────────────────────
-function setBtnLoading(id, loading){
-  const btn = document.getElementById(id);
-  btn.classList.toggle('loading', loading);
-  btn.disabled = loading;
-}
-
-// ── STEP 1: Send OTP ───────────────────────────────────
-async function sendOTP(){
-  clearErrors();
-  const raw = document.getElementById('phoneInput').value.replace(/\D/g,'');
-
-  // Validate Egyptian mobile number
-  if(raw.length < 10){
-    showError('phone-error','Please enter a valid Egyptian phone number (e.g. 01012345678)');
-    return;
-  }
-
-  // Build full international number
-  let phone = raw;
-  if(phone.startsWith('0')) phone = phone.slice(1); // remove leading 0
-  if(!phone.startsWith('20')) phone = '20' + phone; // add Egypt code
-  phone = '+' + phone;
-
-  authState.phone = phone;
-
-  // Show phone in step 2
-  const display = raw.startsWith('0') ? raw : '0'+raw;
-  document.getElementById('phonePrev').textContent   = display;
-  document.getElementById('phonePrevAr').textContent = display;
-
-  setBtnLoading('sendOtpBtn', true);
-
-  try {
-    // ── REAL Supabase call (uncomment when keys are set) ──
-    // await db.auth.signInWithOtp({ phone: authState.phone });
-
-    // ── DEMO MODE (remove when Supabase is connected) ──
-    await fakeDelay(1200);
-    // In demo: OTP is always "123456"
-    console.log('📱 DEMO: OTP sent to', phone, '| Demo code: 123456');
-
-    goToStep(2);
-    startTimer();
-
-  } catch(err){
-    showError('phone-error', err.message || 'Failed to send code. Try again.');
-  } finally {
-    setBtnLoading('sendOtpBtn', false);
-  }
-}
-
-// ── OTP box keyboard handling ──────────────────────────
-function otpInput(idx){
-  const box = document.getElementById('otp'+idx);
-  const val = box.value.replace(/\D/g,'');
-  box.value = val;
-
-  if(val){
-    box.classList.add('filled');
-    box.classList.remove('error');
-    // Auto-advance
-    if(idx < 5) document.getElementById('otp'+(idx+1)).focus();
-  } else {
-    box.classList.remove('filled');
-  }
-
-  // Enable verify btn when all 6 filled
-  const allFilled = [0,1,2,3,4,5].every(i=>document.getElementById('otp'+i).value!=='');
-  document.getElementById('verifyOtpBtn').disabled = !allFilled;
-
-  // Auto-submit when all filled
-  if(allFilled) setTimeout(verifyOTP, 300);
-}
-
-function otpKey(e, idx){
-  // Backspace: clear + go back
-  if(e.key==='Backspace'){
-    const box=document.getElementById('otp'+idx);
-    if(!box.value && idx>0){
-      const prev=document.getElementById('otp'+(idx-1));
-      prev.value='';
-      prev.classList.remove('filled');
-      prev.focus();
-    }
-  }
-  // Paste handler
-  if(e.key==='v' && (e.ctrlKey||e.metaKey)){
-    e.preventDefault();
-    navigator.clipboard.readText().then(text=>{
-      const digits=text.replace(/\D/g,'').slice(0,6);
-      digits.split('').forEach((d,i)=>{
-        const b=document.getElementById('otp'+i);
-        if(b){b.value=d;b.classList.add('filled');}
-      });
-      if(digits.length===6){
-        document.getElementById('otp5').focus();
-        document.getElementById('verifyOtpBtn').disabled=false;
-        setTimeout(verifyOTP,300);
-      }
-    }).catch(()=>{});
-  }
-}
-
-// ── Countdown timer ────────────────────────────────────
-function startTimer(){
-  authState.timerSeconds = 120;
-  stopTimer();
-  document.getElementById('resendBtn').classList.remove('show');
-  updateTimerDisplay();
-  authState.timerInterval = setInterval(()=>{
-    authState.timerSeconds--;
-    updateTimerDisplay();
-    if(authState.timerSeconds<=0){
-      stopTimer();
-      document.getElementById('timerDisplay').textContent='0:00';
-      document.getElementById('resendBtn').classList.add('show');
-    }
-  }, 1000);
-}
-
-function stopTimer(){
-  if(authState.timerInterval) clearInterval(authState.timerInterval);
-}
-
-function updateTimerDisplay(){
-  const m=Math.floor(authState.timerSeconds/60);
-  const s=authState.timerSeconds%60;
-  document.getElementById('timerDisplay').textContent=m+':'+(s<10?'0':'')+s;
-}
-
-async function resendOTP(){
-  document.getElementById('resendBtn').classList.remove('show');
-  clearOtpBoxes();
-  clearErrors();
-
-  try {
-    // await db.auth.signInWithOtp({ phone: authState.phone });
-    await fakeDelay(800);
-    startTimer();
-    showError('otp-error',''); // clear
-    // Show brief success
-    const display=document.getElementById('phonePrev').textContent;
-    console.log('📱 DEMO: Resent OTP to', display);
-  } catch(err){
-    showError('otp-error', 'Failed to resend. Please try again.');
-  }
-}
-
-// ── STEP 2: Verify OTP ────────────────────────────────
-async function verifyOTP(){
-  clearErrors();
-  const code=[0,1,2,3,4,5].map(i=>document.getElementById('otp'+i).value).join('');
-  if(code.length<6) return;
-
-  authState.otpCode=code;
-  setBtnLoading('verifyOtpBtn',true);
-
-  try {
-    // ── REAL Supabase call ──
-    // const { data, error } = await db.auth.verifyOtp({
-    //   phone: authState.phone,
-    //   token: code,
-    //   type: 'sms'
-    // });
-    // if(error) throw error;
-    // authState.currentUser = data.user;
-
-    // ── DEMO MODE ──
-    await fakeDelay(1200);
-    if(code !== '123456'){
-      throw new Error('Incorrect code. Try 123456 in demo mode.');
-    }
-    authState.currentUser = { id: 'demo-user-123', phone: authState.phone };
-
-    stopTimer();
-    goToStep(3);
-
-  } catch(err){
-    // Shake all OTP boxes
-    document.querySelectorAll('.otp-box').forEach(b=>{
-      b.classList.add('error');
-      setTimeout(()=>b.classList.remove('error'),400);
-    });
-    showError('otp-error', err.message || 'Incorrect code. Please try again.');
-    setBtnLoading('verifyOtpBtn',false);
-  }
-}
-
-// ── STEP 3: Name input ────────────────────────────────
-function onNameInput(el){
-  const name=el.value.trim();
-  // Update avatar with first letter
-  const av=document.getElementById('nameAvatar');
-  if(name.length>0){
-    av.textContent=name[0].toUpperCase();
-    const col=avatarColors[name.charCodeAt(0)%avatarColors.length];
-    av.style.background=col;
-  } else {
-    av.textContent='😊';
-    av.style.background='var(--green)';
-  }
-}
-
-// ── STEP 3: Create account ────────────────────────────
-async function createAccount(){
-  clearErrors();
-  const name=document.getElementById('nameInput').value.trim();
-  const city=document.getElementById('citySelect').value;
-
-  if(!name){
-    showError('name-error','Please enter your name');
-    return;
-  }
-
-  setBtnLoading('createAccountBtn',true);
-
-  try {
-    // ── REAL Supabase call ──
-    // await db.from('users').upsert({
-    //   id: authState.currentUser.id,
-    //   phone: authState.phone,
-    //   name: name,
-    //   city: city,
-    //   is_verified: true,
-    // });
-
-    // ── DEMO MODE ──
-    await fakeDelay(1200);
-    authState.currentUser.name = name;
-
-    // Update nav button to show user's name
-    document.querySelectorAll('.btn-signin').forEach(b=>{
-      b.innerHTML=`<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg> ${name.split(' ')[0]}`;
-      b.style.background='var(--green)';
-      b.style.color='#000';
-    });
-
-    // Show success screen
-    document.getElementById('welcomeName').textContent=name;
-    document.getElementById('welcomeNameAr').textContent=name;
-    document.querySelectorAll('.auth-panel').forEach(p=>p.classList.remove('active'));
-    document.getElementById('auth-step-success').classList.add('active');
-
-    // Hide step dots on success
-    document.querySelector('.auth-steps').style.display='none';
-
-    // Update step dots all done
-    for(let i=1;i<=3;i++){
-      const dot=document.getElementById('sdot-'+i);
-      if(dot){dot.className='auth-step-dot done';dot.textContent='✓';}
-      const line=document.getElementById('sline-'+i);
-      if(line) line.className='auth-step-line done';
-    }
-
-  } catch(err){
-    showError('name-error', err.message || 'Something went wrong. Please try again.');
-    setBtnLoading('createAccountBtn',false);
-  }
-}
-
-// ── Utility ───────────────────────────────────────────
-function fakeDelay(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-</script>
-</body>
-</html>
