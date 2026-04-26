@@ -7,8 +7,8 @@
 //  (Project Settings → API)
 // ============================================================
 
-const SUPABASE_URL  = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON = 'YOUR_ANON_PUBLIC_KEY';
+const SUPABASE_URL  = 'https://xewlelrkglgsrbcecigv.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhld2xlbHJrZ2xnc3JiY2VjaWd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MjM4ODUsImV4cCI6MjA5MjE5OTg4NX0.3vY6bhwEysJk6-Y36oqqg2xE6m2FHeYnXUrkCdqbjYE';
 
 // ── Load the Supabase SDK (add this to your HTML <head>) ────
 // <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
